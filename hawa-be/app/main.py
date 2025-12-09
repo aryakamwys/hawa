@@ -13,6 +13,13 @@ from app.db.models import weather_knowledge as weather_knowledge_models  # noqa:
 from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
 from app.api.weather import router as weather_router
+from app.services.weather.scheduler import start_default_scheduler
+from app.core.rate_limit import (
+    iot_data_limiter,
+    ai_recommendation_limiter,
+    get_rate_limit_exception
+)
+from app.core.config import get_settings
 
 # Load environment variables from .env explicitly from project root
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,9 +50,65 @@ app.add_middleware(
 )
 
 
+# Rate Limiting Middleware
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """
+    Rate limiting middleware for IoT data and AI recommendations
+    """
+    path = str(request.url.path)
+    
+    # Skip rate limiting for health check and auth endpoints
+    if path in ["/health", "/docs", "/openapi.json", "/redoc"] or path.startswith("/auth"):
+        return await call_next(request)
+    
+    # Get settings for dynamic rate limits
+    settings = get_settings()
+    
+    # Update limiters with config from settings
+    iot_data_limiter.max_requests = settings.iot_data_rate_limit
+    ai_recommendation_limiter.max_requests = settings.ai_recommendation_rate_limit
+    
+    # Get client identifier (IP address or user_id if authenticated)
+    client_ip = request.client.host if request.client else "unknown"
+    client_key = f"ip_{client_ip}"
+    
+    # Check rate limit for AI recommendation endpoints
+    if "/weather/recommendation" in path:
+        is_allowed, retry_after = ai_recommendation_limiter.check_rate_limit(client_key)
+        if not is_allowed:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "detail": "Too many AI recommendation requests. Please wait.",
+                    "retry_after": retry_after,
+                    "limit": ai_recommendation_limiter.max_requests,
+                    "window_seconds": ai_recommendation_limiter.window_seconds
+                },
+                headers={"Retry-After": str(retry_after)}
+            )
+    
+    # Check rate limit for IoT data endpoints
+    elif "/weather/heatmap" in path or "/admin/spreadsheet" in path or "/weather/realtime" in path:
+        is_allowed, retry_after = iot_data_limiter.check_rate_limit(client_key)
+        if not is_allowed:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "detail": "Too many IoT data requests. Please wait.",
+                    "retry_after": retry_after,
+                    "limit": iot_data_limiter.max_requests,
+                    "window_seconds": iot_data_limiter.window_seconds
+                },
+                headers={"Retry-After": str(retry_after)}
+            )
+    
+    return await call_next(request)
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Custom handler untuk validation errors - memberikan error message yang lebih jelas"""
+    """Custom handler for validation errors - provides clearer error messages"""
     errors = exc.errors()
     error_messages = []
     
@@ -82,3 +145,10 @@ def on_startup() -> None:
     app.include_router(auth_router)
     app.include_router(admin_router)  # Admin routes - protected by get_current_admin
     app.include_router(weather_router)  # Weather routes - protected by get_current_user
+    
+    # Import and include realtime router (lazy import to avoid circular deps)
+    from app.api.weather_realtime import router as realtime_router
+    app.include_router(realtime_router)  # Realtime warnings routes
+
+    # Start weather notification scheduler (06:00 daily, 12:00 if AQI bad)
+    start_default_scheduler()
