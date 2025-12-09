@@ -81,14 +81,12 @@ export default function HeatmapTips({
         json = await tryGet();
       } catch (err) {
         if (err.status === 404 || err.status === 405 || err.status === 500) {
-          // fallback ke POST jika GET tidak tersedia
           json = await tryPost();
         } else {
           throw err;
         }
       }
 
-      // Normalisasi payload supaya render konsisten
       const tipsArray = json?.data?.tips || json?.tips || [];
       const header = json?.data || json || {};
       const normalized = {
@@ -114,80 +112,153 @@ export default function HeatmapTips({
   }, [baseUrl, token, pm25, pm10, airQuality, riskLevel, location, language]);
 
   useEffect(() => {
-    if (autoLoad && (pm25 !== undefined || pm10 !== undefined || riskLevel)) {
+    if (autoLoad && (location || pm25 !== undefined || pm10 !== undefined)) {
       fetchTips();
     }
-    // rerun when apiUrl/token/language/airQuality change to avoid stale requests
+    
     return () => {
       if (abortRef.current) {
         abortRef.current.abort();
       }
     };
-  }, [autoLoad, pm25, pm10, riskLevel, location, apiUrl, token, language, airQuality, fetchTips]);
+  }, [pm25, pm10, riskLevel, location, apiUrl, token, language, airQuality, autoLoad, fetchTips]);
 
   const tips = data?.tips || [];
   const meta = data?.meta || {};
 
+  const uiText = {
+    id: {
+      recommendation: 'Rekomendasi',
+      title: 'Tips Kesehatan & Pencegahan',
+      description: 'Berdasarkan lokasi/polutan terpilih. Klik titik di peta untuk memperbarui.',
+      refresh: 'Refresh',
+      loading: 'Memuat...',
+      location: 'Lokasi',
+      riskLevel: 'Risk Level',
+      notSelected: 'Belum dipilih',
+      preparing: 'Menyiapkan tips...',
+      noTips: 'Belum ada tips. Pilih titik di peta lalu refresh.'
+    },
+    en: {
+      recommendation: 'Recommendation',
+      title: 'Health & Prevention Tips',
+      description: 'Based on selected location/pollutant. Click a point on the map to update.',
+      refresh: 'Refresh',
+      loading: 'Loading...',
+      location: 'Location',
+      riskLevel: 'Risk Level',
+      notSelected: 'Not selected',
+      preparing: 'Preparing tips...',
+      noTips: 'No tips yet. Select a point on the map then refresh.'
+    },
+    su: {
+      recommendation: 'Rekomendasi',
+      title: 'Tips Kaséhatan & Pencegahan',
+      description: 'Dumasar kana lokasi/polutan anu dipilih. Klik titik di peta pikeun ngapdet.',
+      refresh: 'Refresh',
+      loading: 'Ngamuat...',
+      location: 'Lokasi',
+      riskLevel: 'Tingkat Résiko',
+      notSelected: 'Teu acan dipilih',
+      preparing: 'Nyiapkeun tips...',
+      noTips: 'Teu aya tips. Pilih titik di peta teras refresh.'
+    }
+  };
+
+  const t = uiText[language] || uiText.id;
+
+  if (!autoLoad && !location && pm25 === undefined && pm10 === undefined) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">{t.recommendation}</p>
+            <h3 className="text-lg font-bold text-gray-900">{t.title}</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              {t.description}
+            </p>
+          </div>
+        </div>
+        <div className="text-center py-8 text-gray-500">
+          <p className="text-sm">{t.noTips}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Rekomendasi</p>
-          <h3 className="text-lg font-bold text-gray-900">Tips Kesehatan & Pencegahan</h3>
+          <p className="text-xs text-gray-500 uppercase tracking-wide">{t.recommendation}</p>
+          <h3 className="text-lg font-bold text-gray-900">{t.title}</h3>
           <p className="text-sm text-gray-600 mt-1">
-            Berdasarkan lokasi/polutan terpilih. Klik titik di peta untuk memperbarui.
+            {t.description}
           </p>
         </div>
         <button
           onClick={fetchTips}
           disabled={loading}
-          className="px-3 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition disabled:opacity-50"
+          className="px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
-          {loading ? 'Memuat...' : 'Refresh'}
+          {loading ? t.loading : t.refresh}
         </button>
       </div>
 
-      <div className="text-sm text-gray-700 space-y-1">
-        <div>
-          <span className="font-semibold text-gray-900">Lokasi:</span>{' '}
-          {data?.location || location || meta.location || 'Belum dipilih'}
-        </div>
-        <div>
-          <span className="font-semibold text-gray-900">Risk Level:</span>{' '}
-          {data?.riskLevel || riskLevel || meta.risk_level || '-'}
-        </div>
-        <div className="flex gap-3">
-          <span>
-            <span className="font-semibold text-gray-900">PM2.5:</span>{' '}
-            {data?.pm25 ?? pm25 ?? meta.pm25 ?? '-'}
-          </span>
-          <span>
-            <span className="font-semibold text-gray-900">PM10:</span>{' '}
-            {data?.pm10 ?? pm10 ?? meta.pm10 ?? '-'}
-          </span>
+      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div className="text-sm text-gray-700 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-900">{t.location}:</span>
+            <span className="text-gray-600">{data?.location || location || meta.location || t.notSelected}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-900">{t.riskLevel}:</span>
+            <span className="text-gray-600">{data?.riskLevel || riskLevel || meta.risk_level || '-'}</span>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+            <div className="flex gap-4">
+              <span>
+                <span className="font-semibold text-gray-900">PM2.5:</span>{' '}
+                <span className="text-gray-600">{data?.pm25 ?? pm25 ?? meta.pm25 ?? '-'}</span>
+              </span>
+              <span>
+                <span className="font-semibold text-gray-900">PM10:</span>{' '}
+                <span className="text-gray-600">{data?.pm10 ?? pm10 ?? meta.pm10 ?? '-'}</span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3">
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-4">
           {error}
         </div>
       )}
 
       {loading && !tips?.length && (
-        <div className="text-sm text-gray-600">Menyiapkan tips...</div>
+        <div className="text-center py-6 text-gray-600">
+          <div className="animate-pulse">{t.preparing}</div>
+        </div>
       )}
 
       {!loading && tips && tips.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {tips.map((tip, idx) => (
-            <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-              {tip.title && <div className="text-sm font-semibold text-gray-900 mb-1">{tip.title}</div>}
-              {tip.description && <div className="text-sm text-gray-700">{tip.description}</div>}
-              {tip.items && Array.isArray(tip.items) && (
-                <ul className="mt-2 list-disc list-inside text-sm text-gray-700 space-y-1">
+            <div key={idx} className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+              {tip.title && (
+                <div className="text-base font-bold text-gray-900 mb-2">{tip.title}</div>
+              )}
+              {tip.description && (
+                <div className="text-sm text-gray-700 mb-3 leading-relaxed">{tip.description}</div>
+              )}
+              {tip.items && Array.isArray(tip.items) && tip.items.length > 0 && (
+                <ul className="mt-2 space-y-2">
                   {tip.items.map((item, i) => (
-                    <li key={i}>{item}</li>
+                    <li key={i} className="flex items-start space-x-2 text-sm text-gray-700">
+                      <span className="text-blue-600 mt-1">•</span>
+                      <span>{item}</span>
+                    </li>
                   ))}
                 </ul>
               )}
@@ -196,8 +267,8 @@ export default function HeatmapTips({
         </div>
       )}
 
-      {!loading && !tips?.length && !error && (
-        <div className="text-sm text-gray-600">Belum ada tips. Pilih titik di peta lalu refresh.</div>
+      {!loading && !tips?.length && !error && location && (
+        <div className="text-center py-6 text-gray-500 text-sm">{t.noTips}</div>
       )}
     </div>
   );
