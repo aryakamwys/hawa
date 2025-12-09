@@ -21,11 +21,12 @@ export default function HawaLanding() {
     id: {
       nav: ['Beranda', 'Fitur', 'Cara Kerja', 'Tentang', 'Kontak'],
       hero: {
-        badge: '🌍 HAWA',
-        badgeText: 'Melindungi Keluarga dari Polusi Udara',
-        title: 'Polusi Udara Tak Terlihat?',
-        titleHighlight: "Here's the Fix.",
-        subtitle: 'Monitor kualitas udara real-time, dapatkan alert WhatsApp saat bahaya, dan lindungi keluarga dengan insight berbasis AI—semuanya hanya dalam beberapa menit!',
+        brand: 'HAWA',
+        badge: 'HAWA',
+        badgeText: 'Monitor Udara Indoor',
+        title: 'Simplifying',
+        titleHighlight: 'Air Quality monitoring in Smart Way',
+        subtitle: 'Bangun monitor kualitas udara indoor sendiri dan dapatkan insight real-time.',
         cta: 'Mulai Gratis',
         videoTitle: 'Lihat Demo',
         stats: [
@@ -164,11 +165,12 @@ export default function HawaLanding() {
     en: {
       nav: ['Home', 'Features', 'How It Works', 'About', 'Contact'],
       hero: {
-        badge: '🌍 HAWA',
-        badgeText: 'Protecting Families from Air Pollution',
-        title: 'Invisible Air Pollution?',
-        titleHighlight: "Here's the Fix.",
-        subtitle: 'Monitor air quality in real-time, get WhatsApp alerts when dangerous, and protect your family with AI-powered insights—all in just a few minutes!',
+        brand: 'HAWA',
+        badge: 'HAWA',
+        badgeText: 'Indoor Air Quality Monitor',
+        title: 'Simplifying',
+        titleHighlight: 'Air Quality Monitoring the Smart Way',
+        subtitle: 'Build your own indoor air quality monitor with instant insights.',
         cta: 'Get Started Free',
         videoTitle: 'Watch Demo',
         stats: [
@@ -307,11 +309,12 @@ export default function HawaLanding() {
     su: {
       nav: ['Tepas', 'Fitur', 'Kumaha Jalanna', 'Ngeunaan', 'Kontak'],
       hero: {
-        badge: '🌍 HAWA',
-        badgeText: 'Ngajaga Kulawarga tina Polusi Hawa',
-        title: 'Polusi Hawa Teu Katingali?',
-        titleHighlight: 'Ieu Solusina.',
-        subtitle: 'Monitor kualitas hawa real-time, kéngingkeun alert WhatsApp nalika bahaya, sareng jaga kulawarga ku insight dumasar AI—sadaya ngan sababaraha menit!',
+        brand: 'HAWA',
+        badge: 'HAWA',
+        badgeText: 'Monitor Kualitas Hawa',
+        title: 'Ngamudahkeun',
+        titleHighlight: 'Monitor kualitas hawa kalayan cara pinter',
+        subtitle: 'Rancang monitor hawa sorangan jeung meunang insight real-time.',
         cta: 'Mimitian Gratis',
         videoTitle: 'Tingali Demo',
         stats: [
@@ -582,7 +585,7 @@ export default function HawaLanding() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600 overflow-hidden">
       {/* Navigation */}
       <nav className="fixed w-full z-50 left-0 right-0">
         <div className={`w-full flex justify-center transition-all duration-500 ease-out ${
@@ -888,12 +891,11 @@ export default function HawaLanding() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600 pt-24 sm:pt-28 lg:pt-0">
-        {/* Animated Background Elements */}
-        <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ willChange: 'transform' }}>
+      <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600 pt-28 pb-20 overflow-hidden">
+        {/* Animated Background Elements - Same as login page */}
+        <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ willChange: 'transform' }}>
           {/* Wind Effect - Moving Streaks */}
           <div className="absolute inset-0">
-            {/* Thicker Wind Streaks - More Visible */}
             {[...Array(12)].map((_, i) => (
               <div
                 key={`streak-${i}`}
@@ -909,7 +911,7 @@ export default function HawaLanding() {
               ></div>
             ))}
 
-            {/* Wind Swirls - Curved wind streams */}
+            {/* Wind Swirls */}
             {[...Array(8)].map((_, i) => (
               <div
                 key={`swirl-${i}`}
@@ -930,7 +932,7 @@ export default function HawaLanding() {
               ></div>
             ))}
 
-            {/* Enhanced Wind Particles - Different Sizes */}
+            {/* Wind Particles */}
             {[...Array(50)].map((_, i) => {
               const size = 1 + (i % 4) * 0.5;
               return (
@@ -950,97 +952,58 @@ export default function HawaLanding() {
                 ></div>
               );
             })}
-
-            {/* Wind Clouds - Flowing air masses */}
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={`cloud-${i}`}
-                className="absolute rounded-full blur-xl animate-wind-cloud"
-                style={{
-                  width: `${80 + (i % 3) * 40}px`,
-                  height: `${40 + (i % 2) * 20}px`,
-                  background: `rgba(255, 255, 255, ${0.05 + (i % 2) * 0.05})`,
-                  left: `${(i * 15) % 100}%`,
-                  top: `${(i * 12) % 100}%`,
-                  animationDelay: `${i * 2}s`,
-                  animationDuration: `${15 + (i % 5) * 3}s`
-                }}
-              ></div>
-            ))}
-
-            {/* Diagonal Wind Lines */}
-            {[...Array(15)].map((_, i) => (
-              <div
-                key={`diagonal-${i}`}
-                className="absolute animate-wind-diagonal"
-                style={{
-                  width: '2px',
-                  height: `${30 + (i % 5) * 20}px`,
-                  background: `linear-gradient(to bottom, transparent, rgba(255, 255, 255, ${0.2 + (i % 3) * 0.15}), transparent)`,
-                  left: `${(i * 6.5) % 100}%`,
-                  top: `${(i * 7) % 100}%`,
-                  transform: `rotate(${-20 + (i % 5) * 10}deg)`,
-                  animationDelay: `${i * 0.4}s`,
-                  animationDuration: `${7 + (i % 4) * 1.5}s`,
-                  opacity: 0.4
-                }}
-              ></div>
-            ))}
-
           </div>
-
         </div>
 
-        {/* Hero Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center bg-white/10 backdrop-blur-md border border-white/30 px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 rounded-full mb-6 sm:mb-8">
-            <span className="text-white font-semibold text-xs sm:text-sm mr-1.5 sm:mr-2">{t.hero.badge}</span>
-            <span className="text-white/90 text-xs sm:text-sm">{t.hero.badgeText}</span>
-            <ArrowRight className="ml-1.5 sm:ml-2 text-white" size={12} style={{ width: '12px', height: '12px' }} />
-          </div>
-
-          {/* Main Heading */}
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
-            {t.hero.title}
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-blue-300">
-              {t.hero.titleHighlight}
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base md:text-lg text-white/90 max-w-4xl mx-auto mb-10 leading-relaxed px-2">
-            {t.hero.subtitle}
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <a 
-              href="#register"
-              className="bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transform hover:scale-105 transition-all shadow-xl inline-block"
-            >
-              {t.hero.cta}
-            </a>
-            <button className="bg-black/50 backdrop-blur-md text-white px-10 py-4 rounded-full font-bold text-lg border-2 border-white/30 hover:bg-black/70 transition-all flex items-center space-x-2">
-              <Play size={20} />
-              <span>{t.hero.videoTitle}</span>
-            </button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto mb-12 sm:mb-16">
-            {t.hero.stats.map((stat, idx) => (
-              <div key={idx} className="bg-white/10 backdrop-blur-md border border-white/30 p-4 sm:p-6 rounded-2xl">
-                <div className="text-3xl sm:text-4xl font-black text-white mb-1">{stat.value}</div>
-                <div className="text-xs sm:text-sm text-white/80 font-medium">{stat.label}</div>
+        <div className="relative z-10 max-w-5xl mx-auto px-6 flex flex-col items-center text-center gap-10">
+          <div className="space-y-4">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-semibold tracking-[0.35em] text-white/80 uppercase">
+                {t.hero.brand || 'HAWA'}
+              </span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/30 bg-white/20 backdrop-blur-md shadow-sm">
+                <span className="text-sm font-semibold text-white">{t.hero.badge}</span>
+                <ArrowRight className="text-white/80" size={14} />
+                <span className="text-sm text-white/90">{t.hero.badgeText}</span>
               </div>
-            ))}
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-black text-white leading-snug">
+              <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-md inline-block mb-3 border border-white/30">
+                {t.hero.title}
+              </span>
+              <span className="block">
+                {t.hero.titleHighlight}
+              </span>
+            </h1>
+
+            <p className="text-base md:text-lg text-white/90 max-w-2xl mx-auto">
+              {t.hero.subtitle}
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center gap-6 w-full">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a 
+                href="#register"
+                className="bg-gray-900 text-white px-8 py-3 rounded-full font-semibold text-sm shadow-md hover:shadow-lg transition-transform hover:-translate-y-0.5"
+              >
+                {t.hero.cta}
+              </a>
+              <button className="px-8 py-3 rounded-full border border-white/30 bg-white/10 backdrop-blur-md text-sm font-semibold text-white hover:bg-white/20 hover:border-white/50 transition-all">
+                {t.hero.videoTitle}
+              </button>
+            </div>
+
+            <div className="w-full max-w-xl mx-auto">
+              <img 
+                src="/IoT.png" 
+                alt="HAWA IoT sensor" 
+                className="w-full object-contain drop-shadow-2xl"
+              />
+            </div>
           </div>
         </div>
-
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent pointer-events-none"></div>
       </section>
 
       {/* Features Section */}
@@ -1412,19 +1375,6 @@ export default function HawaLanding() {
         </div>
       </footer>
 
-      <style>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

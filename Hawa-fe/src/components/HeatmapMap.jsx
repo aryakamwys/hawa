@@ -322,6 +322,47 @@ export default function HeatmapMap({
                           </div>
                         )}
 
+                        {/* Simple Visualization Bars */}
+                        {(point.pm2_5 !== null || point.pm10 !== null) && (
+                          <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                            <div className="text-xs font-semibold text-gray-700 mb-2">Visualisasi:</div>
+                            {point.pm2_5 !== null && point.pm2_5 !== undefined && (
+                              <div>
+                                <div className="flex justify-between text-xs mb-1">
+                                  <span className="text-gray-600">PM2.5</span>
+                                  <span className="font-semibold">{point.pm2_5.toFixed(0)}</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full transition-all ${
+                                      point.pm2_5 > 75 ? 'bg-red-500' :
+                                      point.pm2_5 > 35 ? 'bg-orange-500' : 'bg-green-500'
+                                    }`}
+                                    style={{ width: `${Math.min(100, (point.pm2_5 / 150) * 100)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            {point.pm10 !== null && point.pm10 !== undefined && (
+                              <div>
+                                <div className="flex justify-between text-xs mb-1">
+                                  <span className="text-gray-600">PM10</span>
+                                  <span className="font-semibold">{point.pm10.toFixed(0)}</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full transition-all ${
+                                      point.pm10 > 100 ? 'bg-red-500' :
+                                      point.pm10 > 75 ? 'bg-orange-500' : 'bg-green-500'
+                                    }`}
+                                    style={{ width: `${Math.min(100, (point.pm10 / 200) * 100)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {point.device_id && (
                           <div className="flex items-center justify-between">
                             <span className="text-gray-600">Device ID:</span>

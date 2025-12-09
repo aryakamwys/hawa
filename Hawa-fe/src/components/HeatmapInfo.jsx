@@ -126,6 +126,7 @@ HeatmapInfo.propTypes = {
   apiUrl: PropTypes.string,
   token: PropTypes.string,
   language: PropTypes.string,
-  onError: PropTypes.func
+  onError: PropTypes.func,
+  mapHeight: PropTypes.string
 };
 
