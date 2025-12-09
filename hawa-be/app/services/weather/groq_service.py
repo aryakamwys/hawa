@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from dotenv import load_dotenv
 from groq import Groq
@@ -10,8 +10,39 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
 
 
+LANGUAGE_TASKS: Dict[str, Dict[str, str]] = {
+    "id": {
+        "task": (
+            "TUGAS:\n"
+            "Berikan ringkasan kualitas udara hari ini dan rekomendasi aksi. "
+            "Fokus pada mitigasi kesehatan, aktivitas luar ruang, ventilasi, dan masker. "
+            "Gunakan Bahasa Indonesia yang ringkas dan tegas."
+        ),
+        "style": "Gunakan nada informatif, langsung ke poin, hindari basa-basi.",
+    },
+    "en": {
+        "task": (
+            "TASK:\n"
+            "Provide today's air quality summary and action recommendations. "
+            "Focus on health mitigation, outdoor activity limits, ventilation, and masks. "
+            "Use concise, direct English."
+        ),
+        "style": "Tone: informative, succinct, actionable.",
+    },
+    "su": {
+        "task": (
+            "TUGAS:\n"
+            "Jelaskeun kualitas udara ayeuna jeung saran aksi. "
+            "Fokus kana kaséhatan, aktivitas luar, ventilasi, jeung masker. "
+            "Pake basa Sunda basajan, singkat."
+        ),
+        "style": "Nada ramah tapi langsung.",
+    },
+}
+
+
 class GroqWeatherService:
-    """Generate personalized weather recommendations using Groq LLM."""
+    """Generate multilingual, structured weather recommendations using Groq LLM."""
 
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
@@ -27,27 +58,34 @@ class GroqWeatherService:
         user_profile: Dict[str, Any],
         context_knowledge: List[str],
         language: str = "id",
-        use_streaming: bool = False
+        use_streaming: bool = False,
     ) -> Dict[str, Any]:
-        """Generate structured personalized weather recommendation."""
+        """
+        Generate structured, language-aware air-quality guidance.
 
-        system_prompt = self._build_system_prompt(language)
-        user_prompt = self._build_user_prompt(weather_data, user_profile, context_knowledge, language)
+        Output schema (stable):
+        {
+          "aqi_level": "good|moderate|unhealthy|hazardous",
+          "summary": "<string>",
+          "recommendation": "<string>",
+          "tips": ["<string>", "<string>"]
+        }
+        """
+        lang = language if language in LANGUAGE_TASKS else "en"
 
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
+            {"role": "system", "content": self._build_system_prompt(lang)},
+            {"role": "user", "content": self._build_user_prompt(weather_data, user_profile, context_knowledge, lang)},
         ]
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                temperature=0.7,
-                max_tokens=2000,
+                temperature=0.4,
+                max_tokens=1200,
                 top_p=0.9,
                 stream=use_streaming,
-                # JSON Mode untuk structured output
                 response_format={"type": "json_object"},
             )
 
@@ -55,161 +93,182 @@ class GroqWeatherService:
                 return self._handle_streaming(response)
 
             content = response.choices[0].message.content
-            return self._parse_response(content)
+            return self._parse_response(content, lang)
 
         except (ValueError, KeyError, AttributeError) as e:
             return {
                 "error": f"Error generating recommendation: {str(e)}",
-                "risk_level": "unknown",
-                "recommendations": [],
-                "primary_concern": "",
-                "personalized_advice": "",
-                "warnings": [],
-                "raw_error": str(e)
+                "aqi_level": "unknown",
+                "summary": "",
+                "recommendation": "",
+                "tips": [],
+                "raw_error": str(e),
             }
         except Exception as e:
             return {
                 "error": f"Unexpected error: {str(e)}",
-                "risk_level": "unknown",
-                "recommendations": [],
-                "primary_concern": "",
-                "personalized_advice": "",
-                "warnings": [],
-                "raw_error": str(e)
+                "aqi_level": "unknown",
+                "summary": "",
+                "recommendation": "",
+                "tips": [],
+                "raw_error": str(e),
             }
 
     def _build_system_prompt(self, language: str) -> str:
-        return """You are an environmental health and meteorology expert focused on West Java air pollution (BMKG Bandung context).
-Use current weather/air-quality data and user profile (age, occupation, health conditions, location, sensitivity) to produce a personalized warning.
-Reasoning steps:
-- Analyze data: PM2.5, PM10, O3, NO2, SO2, CO, temperature, humidity, vulnerability.
-- Assess risk_level: low|medium|high|critical (WHO/IDN aligned).
-- Personalize to the profile (child, elderly, respiratory/cardiac conditions).
-- Provide 3-5 concrete, prioritized actions and clear warnings (what to avoid, impacted activities).
-Output JSON strictly:
-{
-  "risk_level": "low|medium|high|critical",
-  "air_quality_index": number,
-  "primary_concern": "string",
-  "recommendations": [
-    {
-      "priority": "high|medium|low",
-      "category": "health|activity|equipment|medication",
-      "action": "string",
-      "reasoning": "string"
-    }
-  ],
-  "warnings": [
-    {
-      "severity": "info|warning|danger",
-      "message": "string",
-      "affected_activities": ["string"]
-    }
-  ],
-  "personalized_advice": "string",
-  "next_check_time": "string"
-}
-Style: direct, concise, actionable, non-chatty, include brief reasoning for each action. If data insufficient, pick the safest conservative risk_level and still return the full JSON."""
+        """
+        Role + structured-output contract using Groq prompting patterns:
+        - Role Prompting
+        - Instruction Hierarchy
+        - Structured Output
+        - Context Blocks
+        - Style Control
+        """
+        task = LANGUAGE_TASKS[language]["task"]
+        style = LANGUAGE_TASKS[language]["style"]
+
+        return f"""
+[ROLE]
+You are an environmental health specialist focused on West Java (Bandung/BMKG context). 
+You speak the user's preferred language and always return STRICT JSON only.
+
+[OUTPUT CONTRACT]
+Return JSON exactly:
+{{
+  "aqi_level": "good|moderate|unhealthy|hazardous",
+  "summary": "<concise overview of current air quality in target language>",
+  "recommendation": "<one short paragraph, target language>",
+  "tips": ["<short actionable tip 1>", "<tip 2>", "<tip 3>"]
+}}
+
+[RULES]
+- Never add text outside JSON.
+- Use the requested language for summary, recommendation, and tips.
+- Be concise, actionable, and specific to today's data.
+- If data is missing, be conservative and still output valid JSON.
+
+[STYLE]
+{style}
+
+[TASK BASE]
+{task}
+"""
 
     def _build_user_prompt(
         self,
         weather_data: Dict[str, Any],
         user_profile: Dict[str, Any],
         context_knowledge: List[str],
-        language: str
+        language: str,
     ) -> str:
-        """Build contextual user prompt dengan semua informasi relevan"""
-
-        weather_context = f"""
-DATA CUACA & KUALITAS UDARA TERKINI:
-- PM2.5: {weather_data.get('pm25', 'N/A')} μg/m³
-- PM10: {weather_data.get('pm10', 'N/A')} μg/m³
-- O3: {weather_data.get('o3', 'N/A')} ppb
-- NO2: {weather_data.get('no2', 'N/A')} ppb
-- SO2: {weather_data.get('so2', 'N/A')} ppb
-- CO: {weather_data.get('co', 'N/A')} ppm
-- Suhu: {weather_data.get('temperature', 'N/A')}°C
-- Kelembaban: {weather_data.get('humidity', 'N/A')}%
-- Lokasi: {weather_data.get('location', 'N/A')}
-- Timestamp: {weather_data.get('timestamp', 'N/A')}
-"""
-
-        profile_context = f"""
-PROFIL PENGGUNA:
-- Umur: {user_profile.get('age', 'N/A')} tahun
-- Pekerjaan: {user_profile.get('occupation', 'N/A')}
-- Lokasi: {user_profile.get('location', 'N/A')}
-- Level Aktivitas: {user_profile.get('activity_level', 'N/A')}
-- Level Sensitivitas: {user_profile.get('sensitivity_level', 'N/A')}
-- Kondisi Kesehatan: {user_profile.get('health_conditions', 'Tidak ada')}
-"""
+        """Context block for the model."""
+        thresholds = {
+            "good": "PM2.5 <= 12, PM10 <= 50",
+            "moderate": "PM2.5 12-35, PM10 50-75",
+            "unhealthy": "PM2.5 35-75, PM10 75-100",
+            "hazardous": "PM2.5 > 75 or PM10 > 100",
+        }
 
         knowledge_context = ""
         if context_knowledge:
-            knowledge_context = "\n".join([
-                f"KONTEKS PENGETAHUAN {i+1}: {knowledge}"
-                for i, knowledge in enumerate(context_knowledge[:3])
-            ])
+            knowledge_context = "\n".join(
+                [f"- Context {i+1}: {knowledge}" for i, knowledge in enumerate(context_knowledge[:3])]
+            )
 
-        task_prompts = {
-            "id": "TUGAS:\nBerdasarkan data di atas, berikan rekomendasi peringatan kesehatan yang PERSONALISASI untuk pengguna ini.\nFokus pada:\n1. Aktivitas yang HARUS DIHINDARI atau DIBATASI\n2. Perlindungan yang DIPERLUKAN\n3. Tindakan pencegahan SPESIFIK untuk profil pengguna ini\n4. Timeline kapan harus mengecek ulang\n\nBerikan output dalam format JSON sesuai dengan spesifikasi sistem.",
-            "en": "TASK:\nBased on the above data, provide PERSONALIZED health warning recommendations for this user.\nFocus on:\n1. Activities that MUST BE AVOIDED or LIMITED\n2. Protection REQUIRED\n3. SPECIFIC preventive measures for this user profile\n4. Timeline when to check again\n\nProvide output in JSON format according to system specifications.",
-            "su": "TUGAS:\nDumasar kana data di luhur, masihan rekomendasi peringatan kaséhatan anu PERSONALISASI pikeun pangguna ieu.\nFokus kana:\n1. Aktivitas anu KUDU DIHINDARI atanapi DIBATASI\n2. Perlindungan anu DIPERLUKAN\n3. Tindakan pencegahan SPESIFIK pikeun profil pangguna ieu\n4. Timeline iraha kudu mariksa deui\n\nMasihan output dina format JSON luyu sareng spésifikasi sistem."
-        }
-
-        task = task_prompts.get(language, task_prompts["id"])
+        lang_label = {"id": "Bahasa Indonesia", "en": "English", "su": "Bahasa Sunda"}.get(language, "English")
 
         return f"""
-{weather_context}
+[DATA SNAPSHOT]
+- PM2.5: {weather_data.get('pm25', 'N/A')}
+- PM10: {weather_data.get('pm10', 'N/A')}
+- O3: {weather_data.get('o3', 'N/A')}
+- NO2: {weather_data.get('no2', 'N/A')}
+- SO2: {weather_data.get('so2', 'N/A')}
+- CO/CO₂: {weather_data.get('co', weather_data.get('co2', 'N/A'))}
+- Temperature: {weather_data.get('temperature', 'N/A')}
+- Humidity: {weather_data.get('humidity', 'N/A')}
+- Location: {weather_data.get('location', 'N/A')}
+- Timestamp: {weather_data.get('timestamp', 'N/A')}
 
-{profile_context}
+[USER PROFILE]
+- Age: {user_profile.get('age', 'N/A')}
+- Occupation: {user_profile.get('occupation', 'N/A')}
+- Location: {user_profile.get('location', 'N/A')}
+- Activity level: {user_profile.get('activity_level', 'N/A')}
+- Sensitivity: {user_profile.get('sensitivity_level', 'N/A')}
+- Health conditions: {user_profile.get('health_conditions', 'N/A')}
 
-{knowledge_context}
+[INTERNAL THRESHOLDS]
+- {thresholds['good']}
+- {thresholds['moderate']}
+- {thresholds['unhealthy']}
+- {thresholds['hazardous']}
 
-{task}
+[LANGUAGE PREFERENCE]
+- Target language: {lang_label}
+
+[KNOWLEDGE CONTEXT]
+{knowledge_context if knowledge_context else '- None'}
 """
 
-    def _parse_response(self, content: str) -> Dict[str, Any]:
-        """Parse JSON response dari LLM"""
-        def ensure_list(obj: Dict[str, Any], key: str) -> List[Any]:
-            val = obj.get(key, [])
-            return val if isinstance(val, list) else []
+    def _parse_response(self, content: str, language: str) -> Dict[str, Any]:
+        """Parse JSON response from LLM and normalize fields."""
+        def ensure_list(val: Any) -> List[Any]:
+            if isinstance(val, list):
+                return val
+            if val is None:
+                return []
+            return [val]
 
         try:
             if content.startswith("```"):
                 content = content.split("```")[1]
                 if content.startswith("json"):
                     content = content[4:]
-            content = content.strip()
-
-            data = json.loads(content)
-
-            if "risk_level" not in data or data["risk_level"] not in ["low", "medium", "high", "critical"]:
-                data["risk_level"] = "unknown"
-            data["primary_concern"] = data.get("primary_concern", "")
-            data["personalized_advice"] = data.get("personalized_advice", "")
-            data["warnings"] = ensure_list(data, "warnings")
-            data["recommendations"] = ensure_list(data, "recommendations")
-            data["next_check_time"] = data.get("next_check_time", "2 jam lagi")
-            return data
-
+            data = json.loads(content.strip())
         except json.JSONDecodeError as e:
             return {
                 "error": "Failed to parse response",
                 "raw_content": content,
                 "parse_error": str(e),
-                "risk_level": "unknown",
-                "primary_concern": "",
-                "personalized_advice": "",
-                "recommendations": [],
-                "warnings": [],
-                "next_check_time": "2 jam lagi"
+                "aqi_level": "unknown",
+                "summary": "",
+                "recommendation": "",
+                "tips": [],
             }
 
+        aqi_level = str(data.get("aqi_level", "unknown")).lower()
+        if aqi_level not in {"good", "moderate", "unhealthy", "hazardous"}:
+            aqi_level = "unknown"
+
+        tips = ensure_list(data.get("tips"))
+
+        normalized = {
+            "aqi_level": aqi_level,
+            "summary": data.get("summary", ""),
+            "recommendation": data.get("recommendation", ""),
+            "tips": [str(tip) for tip in tips if tip],
+            # backwards-compatible keys for existing callers
+            "risk_level": self._map_aqi_to_risk(aqi_level),
+            "primary_concern": data.get("summary", ""),
+            "personalized_advice": data.get("recommendation", ""),
+        }
+        return normalized
+
+    @staticmethod
+    def _map_aqi_to_risk(aqi_level: str) -> str:
+        """Map new AQI levels to legacy risk labels."""
+        mapping = {
+            "good": "low",
+            "moderate": "medium",
+            "unhealthy": "high",
+            "hazardous": "critical",
+        }
+        return mapping.get(aqi_level, "unknown")
+
     def _handle_streaming(self, stream):
-        """Handle streaming response"""
+        """Handle streaming response."""
         full_content = ""
         for chunk in stream:
             if chunk.choices[0].delta.content:
                 full_content += chunk.choices[0].delta.content
-        return self._parse_response(full_content)
+        return self._parse_response(full_content, language="en")

@@ -1,6 +1,6 @@
 """
 Groq Heatmap Tips Service
-Service untuk generate AI tips untuk heatmap menggunakan Groq LLM
+Service to generate AI tips for heatmap using Groq LLM
 """
 import json
 import os
@@ -14,8 +14,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
 
 
+# Bandung-specific context for tips
+BANDUNG_CONTEXT = """
+[KONTEKS WILAYAH BANDUNG]
+- Bandung terletak di dataran tinggi dengan topografi cekungan
+- Sering terjadi inversi suhu yang memerangkap polusi
+- Aktivitas industri dan lalu lintas padat di pusat kota
+- Polusi PM2.5 sering tinggi di pagi hari (06:00-09:00) dan sore (17:00-20:00)
+- Kawasan Dago, Setiabudi, dan Cicaheum memiliki tingkat polusi berbeda
+- Musim kemarau (Juni-September) biasanya lebih buruk
+- Polusi cenderung lebih tinggi di pusat kota dibanding pinggiran
+"""
+
+
 class GroqHeatmapTipsService:
-    """Service untuk generate AI tips untuk heatmap menggunakan Groq LLM."""
+    """Service to generate AI tips for heatmap using Groq LLM."""
 
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
@@ -34,7 +47,7 @@ class GroqHeatmapTipsService:
         location: Optional[str] = None,
         language: str = "id"
     ) -> Dict[str, Any]:
-        # Build prompt untuk tips
+        # Build prompt for tips
         system_prompt = self._build_system_prompt(language)
         user_prompt = self._build_user_prompt(
             pm25, pm10, air_quality, risk_level, location, language
@@ -75,14 +88,23 @@ Output JSON dengan format:
   "explanation": "Penjelasan singkat tentang kondisi polusi udara saat ini",
   "tips": [
     {
+      "title": "Kesehatan|Aktivitas|Perlindungan",
+      "description": "Deskripsi singkat kategori tips",
+      "items": ["Tips praktis 1", "Tips praktis 2", "Tips praktis 3"],
       "category": "Kesehatan|Aktivitas|Perlindungan",
-      "tip": "Tips praktis yang bisa dilakukan",
       "priority": "high|medium|low"
     }
   ],
   "health_impact": "Dampak kesehatan yang mungkin terjadi",
   "prevention": "Cara pencegahan yang disarankan"
 }
+
+PENTING: Setiap item dalam array "tips" HARUS memiliki:
+- "title": Judul kategori (wajib)
+- "description": Deskripsi singkat (wajib)
+- "items": Array of strings dengan tips praktis (wajib, minimal 2-3 items)
+- "category": Sama dengan title (untuk backward compatibility)
+- "priority": high|medium|low
 
 Gunakan bahasa Indonesia yang mudah dipahami, informatif, dan actionable. Fokus pada tips yang relevan dengan tingkat polusi yang ditampilkan.""",
             "en": """You are an experienced environmental health and air quality expert.
@@ -94,14 +116,23 @@ Output JSON with format:
   "explanation": "Brief explanation about current air pollution condition",
   "tips": [
     {
+      "title": "Health|Activity|Protection",
+      "description": "Brief description of tip category",
+      "items": ["Practical tip 1", "Practical tip 2", "Practical tip 3"],
       "category": "Health|Activity|Protection",
-      "tip": "Practical tip that can be done",
       "priority": "high|medium|low"
     }
   ],
   "health_impact": "Possible health impacts",
   "prevention": "Recommended prevention methods"
 }
+
+IMPORTANT: Each item in "tips" array MUST have:
+- "title": Category title (required)
+- "description": Brief description (required)
+- "items": Array of strings with practical tips (required, minimum 2-3 items)
+- "category": Same as title (for backward compatibility)
+- "priority": high|medium|low
 
 Use easy-to-understand English, informative, and actionable. Focus on tips relevant to the pollution level displayed.""",
             "su": """Anjeun ahli kaséhatan lingkungan sareng kualitas udara anu berpengalaman.
@@ -113,14 +144,23 @@ Output JSON kalayan format:
   "explanation": "Penjelasan singkat ngeunaan kaayaan polusi udara ayeuna",
   "tips": [
     {
+      "title": "Kaséhatan|Aktivitas|Perlindungan",
+      "description": "Deskripsi singkat kategori tips",
+      "items": ["Tips praktis 1", "Tips praktis 2", "Tips praktis 3"],
       "category": "Kaséhatan|Aktivitas|Perlindungan",
-      "tip": "Tips praktis anu tiasa dilakukeun",
       "priority": "high|medium|low"
     }
   ],
   "health_impact": "Dampak kaséhatan anu mungkin lumangsung",
   "prevention": "Cara pencegahan anu disarankeun"
 }
+
+PENTING: Unggal item dina array "tips" KEDAH gaduh:
+- "title": Judul kategori (wajib)
+- "description": Deskripsi singkat (wajib)
+- "items": Array of strings kalayan tips praktis (wajib, minimal 2-3 items)
+- "category": Sarua jeung title (pikeun backward compatibility)
+- "priority": high|medium|low
 
 Gunakeun basa Sunda anu gampang dipahami, informatif, sareng actionable. Fokus kana tips anu relevan sareng tingkat polusi anu ditampilkeun."""
         }
@@ -135,7 +175,17 @@ Gunakeun basa Sunda anu gampang dipahami, informatif, sareng actionable. Fokus k
         location: Optional[str],
         language: str
     ) -> str:
-        """Build user prompt dengan data polusi"""
+        """Build user prompt with pollution data and Bandung context if relevant"""
+        
+        # Check if location is Bandung or West Java
+        location_str = str(location).lower() if location else ""
+        is_bandung = "bandung" in location_str or "jawa barat" in location_str or "west java" in location_str
+        
+        # Add Bandung context if relevant
+        bandung_context = ""
+        if is_bandung:
+            bandung_context = BANDUNG_CONTEXT
+        
         data_info = f"""
 DATA KUALITAS UDARA:
 - PM2.5: {pm25 if pm25 is not None else 'Tidak tersedia'} μg/m³
@@ -143,30 +193,37 @@ DATA KUALITAS UDARA:
 - Status Kualitas Udara: {air_quality if air_quality else 'Tidak tersedia'}
 - Level Risiko: {risk_level.upper() if risk_level else 'Tidak tersedia'}
 - Lokasi: {location if location else 'Tidak tersedia'}
+{bandung_context}
 """
 
         task_prompts = {
-            "id": """Berdasarkan data di atas, berikan:
-1. Penjelasan singkat tentang kondisi polusi udara saat ini di lokasi tersebut
-2. Tips praktis yang bisa dilakukan untuk melindungi kesehatan (3-5 tips)
+            "id": f"""Berdasarkan data di atas{' DAN konteks wilayah Bandung/Jawa Barat' if is_bandung else ''}, berikan:
+1. Penjelasan singkat tentang kondisi polusi udara saat ini di lokasi tersebut{' (spesifik untuk Bandung)' if is_bandung else ''}
+2. Tips praktis yang bisa dilakukan untuk melindungi kesehatan (3-5 tips) - {'sesuaikan dengan kondisi Bandung' if is_bandung else 'relevan dengan lokasi'}
 3. Dampak kesehatan yang mungkin terjadi jika terpapar polusi ini
-4. Cara pencegahan yang disarankan
+4. Cara pencegahan yang disarankan{' (spesifik untuk kondisi Bandung)' if is_bandung else ''}
 
-Fokus pada tips yang actionable dan mudah dipahami oleh masyarakat umum. Tips harus relevan dengan tingkat polusi yang ditampilkan.""",
-            "en": """Based on the above data, provide:
-1. Brief explanation about current air pollution condition at this location
-2. Practical tips that can be done to protect health (3-5 tips)
+Fokus pada tips yang actionable dan mudah dipahami oleh masyarakat umum{' di Bandung' if is_bandung else ''}. 
+{'Sertakan referensi waktu-waktu tertentu di Bandung yang perlu dihindari jika relevan (misalnya jam sibuk 06:00-09:00 dan 17:00-20:00).' if is_bandung else ''}
+Tips harus relevan dengan tingkat polusi yang ditampilkan.""",
+            "en": f"""Based on the above data{' and Bandung/West Java context' if is_bandung else ''}, provide:
+1. Brief explanation about current air pollution condition at this location{' (specific to Bandung)' if is_bandung else ''}
+2. Practical tips that can be done to protect health (3-5 tips) - {'adjusted for Bandung conditions' if is_bandung else 'relevant to location'}
 3. Possible health impacts if exposed to this pollution
-4. Recommended prevention methods
+4. Recommended prevention methods{' (specific to Bandung conditions)' if is_bandung else ''}
 
-Focus on actionable tips that are easy to understand for the general public. Tips must be relevant to the pollution level displayed.""",
-            "su": """Dumasar kana data di luhur, masihan:
-1. Penjelasan singkat ngeunaan kaayaan polusi udara ayeuna di lokasi éta
-2. Tips praktis anu tiasa dilakukeun pikeun ngajaga kaséhatan (3-5 tips)
+Focus on actionable tips that are easy to understand for the general public{' in Bandung' if is_bandung else ''}.
+{'Include references to specific times in Bandung that should be avoided if relevant (e.g., rush hours 06:00-09:00 and 17:00-20:00).' if is_bandung else ''}
+Tips must be relevant to the pollution level displayed.""",
+            "su": f"""Dumasar kana data di luhur{' sareng konteks wilayah Bandung/Jawa Barat' if is_bandung else ''}, masihan:
+1. Penjelasan singkat ngeunaan kaayaan polusi udara ayeuna di lokasi éta{' (spesifik pikeun Bandung)' if is_bandung else ''}
+2. Tips praktis anu tiasa dilakukeun pikeun ngajaga kaséhatan (3-5 tips) - {'disesuaikeun sareng kaayaan Bandung' if is_bandung else 'relevan sareng lokasi'}
 3. Dampak kaséhatan anu mungkin lumangsung upami kakeunaan polusi ieu
-4. Cara pencegahan anu disarankeun
+4. Cara pencegahan anu disarankeun{' (spesifik pikeun kaayaan Bandung)' if is_bandung else ''}
 
-Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips kedah relevan sareng tingkat polusi anu ditampilkeun."""
+Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum{' di Bandung' if is_bandung else ''}.
+{'Sertakeun rujukan waktu-waktu tangtu di Bandung anu kedah dihindari upami relevan (contona jam sibuk 06:00-09:00 sareng 17:00-20:00).' if is_bandung else ''}
+Tips kedah relevan sareng tingkat polusi anu ditampilkeun."""
         }
 
         task = task_prompts.get(language, task_prompts["id"])
@@ -188,12 +245,59 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
             data.setdefault("prevention", "")
 
             if isinstance(data.get("tips"), list):
+                # Normalize tips structure for frontend compatibility
+                normalized_tips = []
                 for tip in data["tips"]:
                     if not isinstance(tip, dict):
+                        # If tip is a string, convert to dict
+                        if isinstance(tip, str):
+                            normalized_tips.append({
+                                "title": "Tips",
+                                "description": "Rekomendasi kesehatan" if language == "id" else "Health recommendations",
+                                "items": [tip],
+                                "category": "Kesehatan" if language == "id" else "Health",
+                                "priority": "medium"
+                            })
                         continue
-                    tip.setdefault("category", "Kesehatan" if language == "id" else "Health")
-                    tip.setdefault("tip", "")
-                    tip.setdefault("priority", "medium")
+                    
+                    # Normalize tip structure for frontend compatibility
+                    # Frontend expects: title, description, items (array)
+                    tip_text = tip.get("tip", tip.get("description", ""))
+                    tip_items = tip.get("items", [])
+                    
+                    # If items is empty but tip text exists, use tip text as single item
+                    if not tip_items and tip_text:
+                        tip_items = [tip_text]
+                    
+                    # If still no items, create default
+                    if not tip_items:
+                        default_text = "Lindungi kesehatan Anda" if language == "id" else "Protect your health"
+                        tip_items = [default_text]
+                    
+                    # Build normalized tip
+                    normalized_tip = {
+                        "title": tip.get("title") or tip.get("category") or ("Kesehatan" if language == "id" else "Health"),
+                        "description": tip.get("description") or tip.get("explanation") or tip_text or "",
+                        "items": tip_items,
+                        "category": tip.get("category", ""),
+                        "priority": tip.get("priority", "medium"),
+                    }
+                    
+                    # Ensure required fields are not empty
+                    if not normalized_tip["title"]:
+                        normalized_tip["title"] = "Kesehatan" if language == "id" else "Health"
+                    if not normalized_tip["description"]:
+                        normalized_tip["description"] = "Rekomendasi kesehatan" if language == "id" else "Health recommendations"
+                    if not normalized_tip["items"] or len(normalized_tip["items"]) == 0:
+                        normalized_tip["items"] = ["Lindungi kesehatan Anda"] if language == "id" else ["Protect your health"]
+                    
+                    normalized_tips.append(normalized_tip)
+                
+                data["tips"] = normalized_tips
+                
+                # If tips array is empty after normalization, use fallback
+                if not data["tips"]:
+                    return self._get_fallback_tips(None, None, None, language)
 
             return data
         except json.JSONDecodeError:
@@ -214,29 +318,31 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
         risk_level: Optional[str],
         language: str
     ) -> Dict[str, Any]:
-        """Get fallback tips jika LLM error"""
+        """Get fallback tips if LLM error"""
         if language == "id":
             if risk_level == "high":
                 tips = [
                     {
+                        "title": "Kesehatan",
+                        "description": "Lindungi diri dari polusi udara tinggi",
+                        "items": [
+                            "Gunakan masker N95 saat berada di luar ruangan",
+                            "Hindari aktivitas fisik berat di luar ruangan",
+                            "Tutup jendela dan gunakan air purifier di dalam ruangan",
+                            "Minum air putih lebih banyak untuk membantu detoksifikasi"
+                        ],
                         "category": "Kesehatan",
-                        "tip": "Gunakan masker N95 saat berada di luar ruangan",
                         "priority": "high"
                     },
                     {
+                        "title": "Aktivitas",
+                        "description": "Batasi aktivitas di luar ruangan",
+                        "items": [
+                            "Hindari olahraga di luar ruangan",
+                            "Tunda aktivitas non-urgent hingga kualitas udara membaik"
+                        ],
                         "category": "Aktivitas",
-                        "tip": "Hindari aktivitas fisik berat di luar ruangan",
                         "priority": "high"
-                    },
-                    {
-                        "category": "Perlindungan",
-                        "tip": "Tutup jendela dan gunakan air purifier di dalam ruangan",
-                        "priority": "medium"
-                    },
-                    {
-                        "category": "Kesehatan",
-                        "tip": "Minum air putih lebih banyak untuk membantu detoksifikasi",
-                        "priority": "medium"
                     }
                 ]
                 health_impact = "Paparan polusi udara tinggi dapat menyebabkan iritasi mata, batuk, sesak napas, memperburuk kondisi pernapasan seperti asma, dan meningkatkan risiko penyakit jantung."
@@ -244,19 +350,15 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
             elif risk_level == "moderate":
                 tips = [
                     {
+                        "title": "Kesehatan",
+                        "description": "Perlindungan untuk kualitas udara sedang",
+                        "items": [
+                            "Gunakan masker saat berada di luar ruangan untuk waktu lama",
+                            "Batasi aktivitas fisik di luar ruangan, terutama untuk kelompok sensitif",
+                            "Pastikan ventilasi ruangan baik"
+                        ],
                         "category": "Kesehatan",
-                        "tip": "Gunakan masker saat berada di luar ruangan untuk waktu lama",
                         "priority": "medium"
-                    },
-                    {
-                        "category": "Aktivitas",
-                        "tip": "Batasi aktivitas fisik di luar ruangan, terutama untuk kelompok sensitif",
-                        "priority": "medium"
-                    },
-                    {
-                        "category": "Perlindungan",
-                        "tip": "Pastikan ventilasi ruangan baik",
-                        "priority": "low"
                     }
                 ]
                 health_impact = "Paparan polusi udara sedang dapat menyebabkan iritasi ringan pada mata dan saluran pernapasan, terutama pada kelompok sensitif seperti anak-anak, lansia, dan penderita asma."
@@ -264,13 +366,13 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
             else:  # low
                 tips = [
                     {
+                        "title": "Kesehatan",
+                        "description": "Kualitas udara baik",
+                        "items": [
+                            "Tetap jaga kesehatan dengan pola hidup sehat",
+                            "Aman untuk melakukan aktivitas di luar ruangan"
+                        ],
                         "category": "Kesehatan",
-                        "tip": "Kualitas udara baik, tetap jaga kesehatan dengan pola hidup sehat",
-                        "priority": "low"
-                    },
-                    {
-                        "category": "Aktivitas",
-                        "tip": "Aman untuk melakukan aktivitas di luar ruangan",
                         "priority": "low"
                     }
                 ]
@@ -292,19 +394,26 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
             if risk_level == "high":
                 tips = [
                     {
+                        "title": "Health",
+                        "description": "Protect yourself from high air pollution",
+                        "items": [
+                            "Use N95 mask when outdoors",
+                            "Avoid heavy physical activity outdoors",
+                            "Close windows and use air purifier indoors",
+                            "Drink more water to help detoxification"
+                        ],
                         "category": "Health",
-                        "tip": "Use N95 mask when outdoors",
                         "priority": "high"
                     },
                     {
+                        "title": "Activity",
+                        "description": "Limit outdoor activities",
+                        "items": [
+                            "Avoid outdoor exercise",
+                            "Postpone non-urgent activities until air quality improves"
+                        ],
                         "category": "Activity",
-                        "tip": "Avoid heavy physical activity outdoors",
                         "priority": "high"
-                    },
-                    {
-                        "category": "Protection",
-                        "tip": "Close windows and use air purifier indoors",
-                        "priority": "medium"
                     }
                 ]
                 health_impact = "High air pollution exposure can cause eye irritation, cough, shortness of breath, worsen respiratory conditions like asthma, and increase heart disease risk."
@@ -312,13 +421,13 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
             elif risk_level == "moderate":
                 tips = [
                     {
+                        "title": "Health",
+                        "description": "Protection for moderate air quality",
+                        "items": [
+                            "Use mask when outdoors for extended periods",
+                            "Limit outdoor physical activity, especially for sensitive groups"
+                        ],
                         "category": "Health",
-                        "tip": "Use mask when outdoors for extended periods",
-                        "priority": "medium"
-                    },
-                    {
-                        "category": "Activity",
-                        "tip": "Limit outdoor physical activity, especially for sensitive groups",
                         "priority": "medium"
                     }
                 ]
@@ -327,8 +436,13 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
             else:
                 tips = [
                     {
+                        "title": "Health",
+                        "description": "Air quality is good",
+                        "items": [
+                            "Maintain health with healthy lifestyle",
+                            "Safe for outdoor activities"
+                        ],
                         "category": "Health",
-                        "tip": "Air quality is good, maintain health with healthy lifestyle",
                         "priority": "low"
                     }
                 ]
@@ -347,26 +461,51 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
                 "prevention": prevention
             }
         else:  # su
+            if risk_level == "high":
+                tips = [
+                    {
+                        "title": "Kaséhatan",
+                        "description": "Lindungi diri tina polusi udara luhur",
+                        "items": [
+                            "Gunakeun masker N95 nalika di luar ruangan",
+                            "Hindari aktivitas fisik beurat di luar ruangan",
+                            "Tutup jandela sareng gunakeun air purifier di jero ruangan"
+                        ],
+                        "category": "Kaséhatan",
+                        "priority": "high"
+                    }
+                ]
+            elif risk_level == "moderate":
+                tips = [
+                    {
+                        "title": "Kaséhatan",
+                        "description": "Perlindungan pikeun kualitas udara sedeng",
+                        "items": [
+                            "Gunakeun masker nalika di luar ruangan",
+                            "Watesan aktivitas fisik di luar ruangan"
+                        ],
+                        "category": "Kaséhatan",
+                        "priority": "medium"
+                    }
+                ]
+            else:
+                tips = [
+                    {
+                        "title": "Kaséhatan",
+                        "description": "Kualitas udara saé",
+                        "items": [
+                            "Tetep jaga kaséhatan kalayan pola hirup séhat",
+                            "Aman pikeun aktivitas di luar ruangan"
+                        ],
+                        "category": "Kaséhatan",
+                        "priority": "low"
+                    }
+                ]
+            
             return {
                 "title": "Tips Kaséhatan & Pencegahan",
                 "explanation": "PM2.5 nyaéta partikel halus di udara anu tiasa asup kana paru-paru sareng nyababkeun masalah kaséhatan. Beuki luhur nilaina, beuki bahaya pikeun kaséhatan.",
-                "tips": [
-                    {
-                        "category": "Kaséhatan",
-                        "tip": "Gunakeun masker N95 nalika di luar ruangan",
-                        "priority": "high"
-                    },
-                    {
-                        "category": "Aktivitas",
-                        "tip": "Hindari aktivitas fisik beurat di luar ruangan",
-                        "priority": "medium"
-                    },
-                    {
-                        "category": "Perlindungan",
-                        "tip": "Tutup jandela sareng gunakeun air purifier di jero ruangan",
-                        "priority": "medium"
-                    }
-                ],
+                "tips": tips,
                 "health_impact": "Paparan polusi udara tiasa nyababkeun iritasi panon, batuk, sesak napas, sareng ngorakeun kaayaan pernapasan.",
                 "prevention": "Hindari aktivitas di luar ruangan nalika polusi luhur, gunakeun masker, sareng pastikeun sirkulasi udara di jero ruangan saé."
             }
