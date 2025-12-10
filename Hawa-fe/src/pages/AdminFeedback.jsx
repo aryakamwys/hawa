@@ -21,6 +21,44 @@ export default function AdminFeedback() {
     loadStats();
   }, []);
   
+  const fallbackSamples = [
+    {
+      id: 101,
+      title: 'Sample asap hitam',
+      description: 'Asap pekat di area industri',
+      location: 'Bandung',
+      category: 'pollution',
+      severity: 'high',
+      status: 'pending',
+      is_anonymous: false,
+      is_public: true,
+      upvotes: 2,
+      view_count: 5,
+      attachment_count: 1,
+      attachment_paths: [],
+      created_at: new Date().toISOString(),
+      author: { full_name: 'Sample User', is_anonymous: false }
+    }
+  ];
+
+  const getAttachments = (attachmentPaths) => {
+    if (!attachmentPaths) return [];
+    if (Array.isArray(attachmentPaths)) return attachmentPaths;
+    try {
+      const parsed = JSON.parse(attachmentPaths);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const toAttachmentUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+    return `${base}/uploads/${path}`;
+  };
+
   const loadFeedback = async () => {
     setLoading(true);
     setError('');
@@ -43,7 +81,7 @@ export default function AdminFeedback() {
       if (adminReports.length === 0) {
         const feed = await feedbackService.getCommunityFeed(token, { limit: params.limit, offset: params.offset, sort: 'newest' });
         const fallback = feed?.reports || [];
-        setReports(fallback);
+        setReports(fallback.length ? fallback : fallbackSamples);
         if (!data.stats && feed?.stats) setStats(feed.stats);
       }
     } catch (err) {
@@ -51,10 +89,12 @@ export default function AdminFeedback() {
       console.error('Error loading feedback:', err);
       try {
         const feed = await feedbackService.getCommunityFeed(token, { limit: 100, offset: 0, sort: 'newest' });
-        setReports(feed?.reports || []);
+        const fallback = feed?.reports || [];
+        setReports(fallback.length ? fallback : fallbackSamples);
         if (feed?.stats) setStats(feed.stats);
       } catch (fallbackErr) {
         console.error('Fallback community feed also failed:', fallbackErr);
+        setReports(fallbackSamples);
       }
     } finally {
       setLoading(false);
@@ -265,7 +305,8 @@ export default function AdminFeedback() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -316,6 +357,22 @@ export default function AdminFeedback() {
                         <div className="flex items-center space-x-3">
                           <span className="text-gray-400">👁 {report.view_count || 0}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {getAttachments(report.attachment_paths || report.attachments)?.length > 0 ? (
+                          <button
+                            onClick={() => {
+                              const first = getAttachments(report.attachment_paths || report.attachments)[0];
+                              const url = toAttachmentUrl(first);
+                              if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                            }}
+                            className="px-3 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                          >
+                            View Files
+                          </button>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}
