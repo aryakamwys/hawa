@@ -7,6 +7,7 @@ import Profile from '../pages/Profile.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
 import AdminUsers from '../pages/AdminUsers.jsx';
 import AdminIoTData from '../pages/AdminIoTData.jsx';
+import AdminFeedback from '../pages/AdminFeedback.jsx';
 import MapPollutan from '../pages/MapPollutan.jsx';
 import CompliancePage from '../pages/CompliancePage.jsx';
 import CommunityPage from '../pages/CommunityPage.jsx';
