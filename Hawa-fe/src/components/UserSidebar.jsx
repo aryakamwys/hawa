@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react';
-import { LogOut, Users, LayoutDashboard, Map, User } from 'lucide-react';
+import { LogOut, Users, LayoutDashboard, Map, User, Factory, MessageSquare } from 'lucide-react';
 import { authService } from '../services/auth';
 import PropTypes from 'prop-types';
 
 export default function UserSidebar({ isOpen, onClose }) {
   const currentUser = authService.getCurrentUser();
   const [currentHash, setCurrentHash] = useState(window.location.hash || '#landing');
-  const navItems = [
+  
+  // Base menu items for all users
+  const baseNavItems = [
     { label: 'Dashboard', hash: '#dashboard', icon: LayoutDashboard },
     { label: 'Map Pollutan', hash: '#map', icon: Map },
+    { label: 'Community Reports', hash: '#community', icon: MessageSquare },
     { label: 'Profil', hash: '#profile', icon: User }
   ];
+  
+  // Add Compliance menu for industry users
+  const navItems = currentUser?.role === 'industry' 
+    ? [...baseNavItems, { label: 'Compliance', hash: '#compliance', icon: Factory }]
+    : baseNavItems;
 
   useEffect(() => {
     const onHashChange = () => setCurrentHash(window.location.hash || '#landing');

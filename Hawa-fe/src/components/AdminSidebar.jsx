@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Users, Database, LayoutDashboard, X } from 'lucide-react';
+import { LogOut, Users, Database, LayoutDashboard, X, MessageSquare } from 'lucide-react';
 import { authService } from '../services/auth';
 import PropTypes from 'prop-types';
 
@@ -14,6 +14,8 @@ export default function AdminSidebar({ isOpen, onClose }) {
       const hash = window.location.hash.slice(1);
       if (hash === 'admin') {
         setActiveMenu('dashboard');
+      } else if (hash === 'admin/users') {
+        setActiveMenu('users');
       } else if (hash === 'admin/iot-data') {
         setActiveMenu('iot-data');
       }
@@ -37,7 +39,9 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', hash: '#admin' },
-    { id: 'iot-data', icon: Database, label: 'IoT Data', hash: '#admin/iot-data' }
+    { id: 'users', icon: Users, label: 'Users', hash: '#admin/users' },
+    { id: 'iot-data', icon: Database, label: 'IoT Data', hash: '#admin/iot-data' },
+    { id: 'feedback', icon: MessageSquare, label: 'Community Feedback', hash: '#admin/feedback' }
   ];
 
   const handleMenuClick = (hash) => {

@@ -324,6 +324,12 @@ export const authService = {
     const user = authService.getCurrentUser();
     // Sementara cek dari user data, bisa di-upgrade untuk ambil dari backend
     return user && (user.role === 'admin' || user.is_admin === true);
+  },
+
+  // cek apakah user adalah industry
+  isIndustry: () => {
+    const user = authService.getCurrentUser();
+    return user && user.role === 'industry';
   }
 };
 

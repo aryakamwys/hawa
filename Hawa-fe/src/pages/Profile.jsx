@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Menu, Save, CheckCircle2, XCircle, User as UserIcon } from 'lucide-react';
 import { authService } from '../services/auth';
 import UserSidebar from '../components/UserSidebar';
+import AlertSettings from '../components/AlertSettings';
 
 export default function Profile() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -356,6 +357,11 @@ export default function Profile() {
                   </div>
                 </fieldset>
               </form>
+
+              {/* Alert Settings Section */}
+              <div className="mt-6">
+                <AlertSettings language={formData.language || 'id'} />
+              </div>
             </div>
           </div>
         </main>

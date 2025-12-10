@@ -5,8 +5,11 @@ import Register from '../pages/Register.jsx';
 import Dashboard from '../pages/Dashboard.jsx';
 import Profile from '../pages/Profile.jsx';
 import AdminDashboard from '../pages/AdminDashboard.jsx';
+import AdminUsers from '../pages/AdminUsers.jsx';
 import AdminIoTData from '../pages/AdminIoTData.jsx';
 import MapPollutan from '../pages/MapPollutan.jsx';
+import CompliancePage from '../pages/CompliancePage.jsx';
+import CommunityPage from '../pages/CommunityPage.jsx';
 import SplashScreen from '../components/SplashScreen.jsx';
 import { authService } from '../services/auth.js';
 
@@ -23,9 +26,13 @@ export default function AppRouter() {
       hash === 'register' ||
       hash === 'dashboard' ||
       hash === 'profile' ||
+      hash === 'compliance' ||
+      hash === 'community' ||
       hash === 'admin' ||
-      hash === 'admin/iot-data'
-      || hash === 'map'
+      hash === 'admin/users' ||
+      hash === 'admin/iot-data' ||
+      hash === 'admin/feedback' ||
+      hash === 'map'
     ) {
       return hash;
     }
@@ -43,14 +50,14 @@ export default function AppRouter() {
     const initialPage = getPageFromHash();
     
     // Redirect to login if trying to access dashboard without auth
-    if ((initialPage === 'dashboard' || initialPage === 'profile' || initialPage === 'map') && !authService.isAuthenticated()) {
+    if ((initialPage === 'dashboard' || initialPage === 'profile' || initialPage === 'map' || initialPage === 'compliance' || initialPage === 'community') && !authService.isAuthenticated()) {
       setCurrentPage('login');
       window.location.hash = '#login';
-    } else if ((initialPage === 'admin' || initialPage === 'admin/iot-data') && !authService.isAuthenticated()) {
+    } else if ((initialPage === 'admin' || initialPage === 'admin/users' || initialPage === 'admin/iot-data') && !authService.isAuthenticated()) {
       // Redirect to login if trying to access admin without auth
       setCurrentPage('login');
       window.location.hash = '#login';
-    } else if ((initialPage === 'admin' || initialPage === 'admin/iot-data') && !authService.isAdmin()) {
+    } else if ((initialPage === 'admin' || initialPage === 'admin/users' || initialPage === 'admin/iot-data' || initialPage === 'admin/feedback') && !authService.isAdmin()) {
       // Redirect to dashboard if not admin
       setCurrentPage('dashboard');
       window.location.hash = '#dashboard';
@@ -66,20 +73,20 @@ export default function AppRouter() {
       const newPage = getPageFromHash();
       
       // Protect dashboard route
-      if ((newPage === 'dashboard' || newPage === 'profile' || newPage === 'map') && !authService.isAuthenticated()) {
+      if ((newPage === 'dashboard' || newPage === 'profile' || newPage === 'map' || newPage === 'compliance' || newPage === 'community') && !authService.isAuthenticated()) {
         setCurrentPage('login');
         window.location.hash = '#login';
         return;
       }
       
       // Protect admin routes
-      if ((newPage === 'admin' || newPage === 'admin/iot-data') && !authService.isAuthenticated()) {
+      if ((newPage === 'admin' || newPage === 'admin/users' || newPage === 'admin/iot-data' || newPage === 'admin/feedback') && !authService.isAuthenticated()) {
         setCurrentPage('login');
         window.location.hash = '#login';
         return;
       }
       
-      if ((newPage === 'admin' || newPage === 'admin/iot-data') && !authService.isAdmin()) {
+      if ((newPage === 'admin' || newPage === 'admin/users' || newPage === 'admin/iot-data' || newPage === 'admin/feedback') && !authService.isAdmin()) {
         setCurrentPage('dashboard');
         window.location.hash = '#dashboard';
         return;
@@ -92,8 +99,11 @@ export default function AppRouter() {
         newPage === 'dashboard' ||
         newPage === 'profile' ||
         newPage === 'map' ||
+        newPage === 'compliance' ||
         newPage === 'admin' ||
-        newPage === 'admin/iot-data'
+        newPage === 'admin/users' ||
+        newPage === 'admin/iot-data' ||
+        newPage === 'admin/feedback'
       ) {
         // Selalu update key saat pindah ke halaman untuk reset animasi
         setPageKey(Date.now());
@@ -112,7 +122,7 @@ export default function AppRouter() {
     const handleStorageChange = (e) => {
       if (e.key === 'hawa_auth_token') {
         checkAuth();
-        if (currentPage === 'dashboard' || currentPage === 'profile' || currentPage === 'map' || currentPage === 'admin' || currentPage === 'admin/iot-data') {
+        if (currentPage === 'dashboard' || currentPage === 'profile' || currentPage === 'map' || currentPage === 'compliance' || currentPage === 'admin' || currentPage === 'admin/users' || currentPage === 'admin/iot-data') {
           setCurrentPage('login');
           window.location.hash = '#login';
         }
@@ -158,9 +168,14 @@ export default function AppRouter() {
         {currentPage === 'register' && <Register key={`register-${pageKey}`} />}
         {currentPage === 'dashboard' && <Dashboard key={`dashboard-${pageKey}`} />}
         {currentPage === 'profile' && <Profile key={`profile-${pageKey}`} />}
+        {currentPage === 'compliance' && <CompliancePage key={`compliance-${pageKey}`} />}
         {currentPage === 'admin' && <AdminDashboard key={`admin-${pageKey}`} />}
+        {currentPage === 'admin/users' && <AdminUsers key={`admin-users-${pageKey}`} />}
         {currentPage === 'admin/iot-data' && <AdminIoTData key={`admin-iot-data-${pageKey}`} />}
+        {currentPage === 'admin/feedback' && <AdminFeedback key={`admin-feedback-${pageKey}`} />}
         {currentPage === 'map' && <MapPollutan key={`map-${pageKey}`} />}
+        {currentPage === 'compliance' && <CompliancePage key={`compliance-${pageKey}`} />}
+        {currentPage === 'community' && <CommunityPage key={`community-${pageKey}`} />}
         {currentPage === 'landing' && <HawaLanding key={`landing-${pageKey}`} />}
       </div>
       

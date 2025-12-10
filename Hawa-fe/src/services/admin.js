@@ -1,7 +1,7 @@
 // src/services/admin.js
 // Admin service: konsumsi API backend untuk admin endpoints
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -160,6 +160,93 @@ export const adminService = {
 
     const res = await fetch(`${API_BASE_URL}/admin/dashboard`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return handleResponse(res);
+  },
+
+  /**
+   * Get all users
+   * GET {API_BASE_URL}/admin/users
+   */
+  getUsers: async (token) => {
+    if (!API_BASE_URL) {
+      throw new Error('VITE_API_BASE_URL belum dikonfigurasi');
+    }
+
+    const res = await fetch(`${API_BASE_URL}/admin/users`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return handleResponse(res);
+  },
+
+  /**
+   * Promote user to industry role
+   * POST {API_BASE_URL}/admin/users/promote-industry
+   */
+  promoteToIndustry: async (token, userId) => {
+    if (!API_BASE_URL) {
+      throw new Error('VITE_API_BASE_URL belum dikonfigurasi');
+    }
+
+    const res = await fetch(`${API_BASE_URL}/admin/users/promote-industry`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ user_id: userId })
+    });
+
+    return handleResponse(res);
+  },
+
+  /**
+   * Create new industry user
+   * POST {API_BASE_URL}/admin/users/create-industry
+   */
+  createIndustryUser: async (token, userData) => {
+    const url = `${API_BASE_URL}/admin/users/create-industry`;
+    
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+
+      return handleResponse(res);
+    } catch (err) {
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        throw new Error(`Failed to connect to backend. Please ensure the server is running at ${API_BASE_URL}`);
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Update user role
+   * PUT {API_BASE_URL}/admin/users/{userId}/role
+   */
+  updateUserRole: async (token, userId, newRole) => {
+    if (!API_BASE_URL) {
+      throw new Error('VITE_API_BASE_URL belum dikonfigurasi');
+    }
+
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role?new_role=${newRole}`, {
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

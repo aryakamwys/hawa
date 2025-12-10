@@ -258,3 +258,4 @@ WeatherChart.propTypes = {
   language: PropTypes.string
 };
 
+

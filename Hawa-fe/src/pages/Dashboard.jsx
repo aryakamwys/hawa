@@ -4,6 +4,7 @@ import { Cloud, Thermometer, Droplets, Wind, MapPin, Globe, Menu, LayoutDashboar
 import UserSidebar from '../components/UserSidebar';
 import HourlyForecast from '../components/HourlyForecast';
 import DailyForecast from '../components/DailyForecast';
+import { WeatherCardSkeleton, ForecastCardSkeleton, MapCardSkeleton } from '../components/LoadingSkeleton';
 import { authService } from '../services/auth';
 
 export default function Dashboard() {
@@ -244,11 +245,9 @@ export default function Dashboard() {
                   <MapPin size={14} className="text-blue-600" />
                   <span>{userLocation}, ID</span>
                 </div>
-
+                
                 {loading ? (
-                  <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 text-center text-xs text-gray-600">
-                    Memuat data cuaca...
-                  </div>
+                  <WeatherCardSkeleton />
                 ) : currentWeather && currentWeather.current ? (
                   <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                     <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 border-b border-gray-200">
@@ -257,66 +256,66 @@ export default function Dashboard() {
                         <div>
                           <div className="text-4xl font-bold text-gray-900 mb-1">
                             {Math.round(currentWeather.current.temperature || 0)}{t.celsius}
-                          </div>
+                    </div>
                           <div className="text-sm text-gray-700">
                             {t.feelsLike} {Math.round(currentWeather.current.feels_like || currentWeather.current.temperature || 0)}{t.celsius}
-                          </div>
+                  </div>
                           <div className="text-xs text-gray-600 mt-0.5">
                             {currentWeather.current.weather?.description || 'Cerah'}. {t.moderateBreeze}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
                     <div className="p-3">
                       <div className="grid grid-cols-5 gap-3">
                         <div className="flex items-start space-x-2">
                           <div className="p-1.5 bg-blue-50 rounded-lg">
                             <Wind className="text-blue-600" size={16} />
-                          </div>
-                          <div>
+                  </div>
+                  <div>
                             <div className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">{t.wind}</div>
                             <div className="text-sm font-bold text-gray-900">
                               {(currentWeather.current.wind_speed || 0).toFixed(1)} {t.ms}
-                            </div>
-                          </div>
-                        </div>
+                  </div>
+                </div>
+                </div>
 
                         <div className="flex items-start space-x-2">
                           <div className="p-1.5 bg-purple-50 rounded-lg">
                             <Gauge className="text-purple-600" size={16} />
-                          </div>
+              </div>
                           <div>
                             <div className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">{t.pressure}</div>
                             <div className="text-sm font-bold text-gray-900">
                               {currentWeather.current.pressure || 'N/A'} {t.hpa}
-                            </div>
-                          </div>
-                        </div>
+              </div>
+            </div>
+              </div>
 
                         <div className="flex items-start space-x-2">
                           <div className="p-1.5 bg-green-50 rounded-lg">
                             <Droplets className="text-green-600" size={16} />
-                          </div>
+                  </div>
                           <div>
                             <div className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">{t.humidity}</div>
                             <div className="text-sm font-bold text-gray-900">
                               {currentWeather.current.humidity || 'N/A'}{t.percent}
-                            </div>
-                          </div>
-                        </div>
+                </div>
+                  </div>
+                </div>
 
                         <div className="flex items-start space-x-2">
                           <div className="p-1.5 bg-cyan-50 rounded-lg">
                             <Thermometer className="text-cyan-600" size={16} />
-                          </div>
+                  </div>
                           <div>
                             <div className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">{t.dewPoint}</div>
                             <div className="text-sm font-bold text-gray-900">
                               {currentWeather.current.dew_point || Math.round((currentWeather.current.temperature || 0) - 3)}{t.celsius}
-                            </div>
-                          </div>
-                        </div>
+                </div>
+              </div>
+            </div>
 
                         <div className="flex items-start space-x-2">
                           <div className="p-1.5 bg-orange-50 rounded-lg">
@@ -330,7 +329,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </div>
-                    </div>
+              </div>
                   </div>
                 ) : (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-xs">
@@ -339,43 +338,48 @@ export default function Dashboard() {
                 )}
               </div>
 
-              <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-2 border-b border-gray-200 bg-gray-50">
-                  <h3 className="text-sm font-bold text-gray-900">Peta Lokasi</h3>
-                </div>
-                <div style={{ height: '100%', minHeight: '200px', position: 'relative' }}>
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    scrolling="no"
-                    marginHeight="0"
-                    marginWidth="0"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${107.4},${-7.0},${107.8},${-6.8}&layer=mapnik&marker=${-6.9175},${107.6191}`}
-                    style={{ border: 0 }}
-                    className="w-full h-full"
-                  />
-                  <div className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-gray-600 shadow-sm border border-gray-200">
-                    © OpenStreetMap
+              {loading ? (
+                <MapCardSkeleton />
+              ) : (
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-2 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-sm font-bold text-gray-900">Peta Lokasi</h3>
+                  </div>
+                  <div style={{ height: '100%', minHeight: '200px', position: 'relative' }}>
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      scrolling="no"
+                      marginHeight="0"
+                      marginWidth="0"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${107.4},${-7.0},${107.8},${-6.8}&layer=mapnik&marker=${-6.9175},${107.6191}`}
+                      style={{ border: 0 }}
+                      className="w-full h-full"
+                    />
+                    <div className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-gray-600 shadow-sm border border-gray-200">
+                      © OpenStreetMap
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 overflow-hidden">
               <HourlyForecast
-                apiUrl={apiUrl}
-                token={token}
-                city={userLocation}
-                language={userLanguage}
-              />
+                  apiUrl={apiUrl}
+                  token={token}
+                  city={userLocation}
+                  language={userLanguage}
+                />
               <DailyForecast
-                apiUrl={apiUrl}
-                token={token}
-                city={userLocation}
-                language={userLanguage}
-              />
-            </div>
+                  apiUrl={apiUrl}
+                  token={token}
+                  city={userLocation}
+                  language={userLanguage}
+                />
+          </div>
+
           </div>
         </div>
       </div>
