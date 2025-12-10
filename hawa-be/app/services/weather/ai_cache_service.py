@@ -162,3 +162,4 @@ _ai_cache_service = AICacheService(ttl_seconds=1, max_size=1000)
 def get_ai_cache_service() -> AICacheService:
     """Get global AI cache service instance"""
     return _ai_cache_service
+

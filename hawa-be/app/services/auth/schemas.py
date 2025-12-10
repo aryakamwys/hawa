@@ -29,6 +29,13 @@ class UserResponse(BaseModel):
     
     # Privacy
     privacy_consent: bool = False
+    
+    # Alert settings
+    alert_pm25_threshold: float | None = None
+    alert_pm10_threshold: float | None = None
+    alert_enabled: bool = True
+    alert_methods: str | None = None
+    alert_frequency: str | None = None
 
     class Config:
         from_attributes = True
@@ -42,12 +49,25 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    role: str  # "user" or "admin" - untuk menentukan redirect ke dashboard mana
+    role: str  # "user", "admin", or "industry" - untuk menentukan redirect ke dashboard mana
 
 
 class PromoteToAdminRequest(BaseModel):
     user_id: int
     admin_secret: str
+
+
+class PromoteToIndustryRequest(BaseModel):
+    user_id: int
+
+
+class CreateIndustryUserRequest(BaseModel):
+    full_name: str | None = None
+    email: EmailStr
+    phone_e164: str | None = None
+    password: str
+    locale: str | None = None
+    language: LanguageEnum | None = None
 
 
 class UpdateProfileRequest(BaseModel):
@@ -94,4 +114,20 @@ class UpdateProfileRequest(BaseModel):
             raise ValueError('sensitivity_level must be one of: low, medium, high')
         return v
 
+
+class UpdateAlertSettingsRequest(BaseModel):
+    """Request untuk update alert settings"""
+    alert_pm25_threshold: float | None = None
+    alert_pm10_threshold: float | None = None
+    alert_enabled: bool = True
+    alert_methods: list[str] = ["whatsapp"]
+    alert_frequency: str = "realtime"  # "realtime", "hourly", "daily"
+    
+    @field_validator('alert_frequency')
+    @classmethod
+    def validate_alert_frequency(cls, v):
+        """Validate alert frequency"""
+        if v not in ['realtime', 'hourly', 'daily']:
+            raise ValueError('alert_frequency must be one of: realtime, hourly, daily')
+        return v
 

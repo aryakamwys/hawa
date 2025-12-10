@@ -29,6 +29,7 @@ class AuthService:
             email=email,
             phone_e164=phone_e164,
             password_hash=hash_password(password),
+            role=RoleEnum.USER,  # Always USER - industry accounts must be created by admin
         )
         if locale:
             user.locale = locale
@@ -56,6 +57,52 @@ class AuthService:
         if user is None:
             raise ValueError("User not found")
         user.role = RoleEnum.ADMIN
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def promote_to_industry(self, *, user_id: int) -> User:
+        """Promote a user to industry role."""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise ValueError("User not found")
+        user.role = RoleEnum.INDUSTRY
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def create_industry_user(
+        self,
+        *,
+        full_name: str | None,
+        email: str,
+        phone_e164: str | None,
+        password: str,
+        locale: str | None = None,
+        language: LanguageEnum | None = None,
+    ) -> User:
+        """Create a new industry user directly (admin only)"""
+        # Check existing email / phone
+        if self.db.query(User).filter(User.email == email).first():
+            raise ValueError("Email already registered")
+        if phone_e164 and self.db.query(User).filter(User.phone_e164 == phone_e164).first():
+            raise ValueError("Phone number already registered")
+
+        user = User(
+            full_name=full_name,
+            email=email,
+            phone_e164=phone_e164,
+            password_hash=hash_password(password),
+            role=RoleEnum.INDUSTRY,  # Set as INDUSTRY directly
+        )
+        if locale:
+            user.locale = locale
+        if language:
+            user.language = language
+        else:
+            user.language = LanguageEnum.ID
+
+        self.db.add(user)
         self.db.commit()
         self.db.refresh(user)
         return user

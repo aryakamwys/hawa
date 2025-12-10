@@ -16,6 +16,7 @@ from app.services.auth.schemas import (
     TokenResponse,
     PromoteToAdminRequest,
     UpdateProfileRequest,
+    UpdateAlertSettingsRequest,
 )
 from app.services.auth.service import AuthService
 # Import User for profile update checks
@@ -64,7 +65,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         
         return TokenResponse(
             access_token=token,
-            role=user.role.value  # "user" or "admin"
+            role=user.role.value  # "user", "admin", or "industry"
         )
     except HTTPException:
         raise
@@ -94,13 +95,18 @@ def get_current_user_info(current_user: "User" = Depends(get_current_user)):
         phone_e164=current_user.phone_e164,
         locale=current_user.locale,
         language=current_user.language.value if current_user.language else None,
-        role=current_user.role.value,  # "user" or "admin"
+        role=current_user.role.value,  # "user", "admin", or "industry"
         age=current_user.age,
         occupation=current_user.occupation,
         location=current_user.location,
         activity_level=current_user.activity_level,
         sensitivity_level=current_user.sensitivity_level,
         privacy_consent=current_user.privacy_consent,
+        alert_pm25_threshold=current_user.alert_pm25_threshold,
+        alert_pm10_threshold=current_user.alert_pm10_threshold,
+        alert_enabled=current_user.alert_enabled,
+        alert_methods=current_user.alert_methods,
+        alert_frequency=current_user.alert_frequency,
     )
 
 
@@ -200,6 +206,11 @@ def update_user_profile(
         activity_level=current_user.activity_level,
         sensitivity_level=current_user.sensitivity_level,
         privacy_consent=current_user.privacy_consent,
+        alert_pm25_threshold=current_user.alert_pm25_threshold,
+        alert_pm10_threshold=current_user.alert_pm10_threshold,
+        alert_enabled=current_user.alert_enabled,
+        alert_methods=current_user.alert_methods,
+        alert_frequency=current_user.alert_frequency,
     )
 
 

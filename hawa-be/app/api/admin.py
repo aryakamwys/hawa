@@ -10,10 +10,20 @@ from app.core.config import get_settings
 from app.core.exceptions import handle_google_sheets_error
 from app.db.postgres import get_db
 from app.db.models.user import User, RoleEnum
-from app.services.auth.schemas import UserResponse
+from app.services.auth.schemas import UserResponse, PromoteToIndustryRequest, CreateIndustryUserRequest
+from app.services.auth.service import AuthService
 from app.services.weather.heatmap_processor import HeatmapProcessor
 from app.services.weather.sheets_cache_service import get_cached_sheets_data
 from app.services.weather.spreadsheet_service import SpreadsheetService
+from app.services.feedback.service import FeedbackService
+from app.services.feedback.schemas import (
+    FeedbackResponse,
+    FeedbackListResponse,
+    AdminFeedbackStatusUpdate,
+    AdminFeedbackNotesUpdate,
+    FeedbackStatsResponse
+)
+from app.db.models.feedback import CommunityFeedback, FeedbackStatusEnum
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -34,6 +44,8 @@ def admin_dashboard(
         "stats": {
             "total_users": db.query(User).count(),
             "total_admins": db.query(User).filter(User.role == RoleEnum.ADMIN).count(),
+            "total_industry": db.query(User).filter(User.role == RoleEnum.INDUSTRY).count(),
+            "total_public": db.query(User).filter(User.role == RoleEnum.USER).count(),
         },
     }
 
@@ -341,4 +353,129 @@ def get_heatmap_data(
         ) from e
     except Exception as e:
         raise handle_google_sheets_error(e)
+
+
+@router.post("/users/promote-industry", response_model=UserResponse)
+def promote_to_industry(
+    payload: PromoteToIndustryRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Promote an existing user to industry role (admin only)"""
+    service = AuthService(db)
+    try:
+        user = service.promote_to_industry(user_id=payload.user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+    return UserResponse(
+        id=user.id,
+        full_name=user.full_name,
+        email=user.email,
+        phone_e164=user.phone_e164,
+        locale=user.locale,
+        language=user.language.value if user.language else None,
+        role=user.role.value,
+        age=user.age,
+        occupation=user.occupation,
+        location=user.location,
+        activity_level=user.activity_level,
+        sensitivity_level=user.sensitivity_level,
+        privacy_consent=user.privacy_consent,
+    )
+
+
+@router.post("/users/create-industry", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_industry_user(
+    payload: CreateIndustryUserRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Create a new industry user directly (admin only)"""
+    service = AuthService(db)
+    try:
+        user = service.create_industry_user(
+            full_name=payload.full_name,
+            email=payload.email,
+            phone_e164=payload.phone_e164,
+            password=payload.password,
+            locale=payload.locale,
+            language=payload.language,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    
+    return UserResponse(
+        id=user.id,
+        full_name=user.full_name,
+        email=user.email,
+        phone_e164=user.phone_e164,
+        locale=user.locale,
+        language=user.language.value if user.language else None,
+        role=user.role.value,
+        age=user.age,
+        occupation=user.occupation,
+        location=user.location,
+        activity_level=user.activity_level,
+        sensitivity_level=user.sensitivity_level,
+        privacy_consent=user.privacy_consent,
+    )
+
+
+@router.put("/users/{user_id}/role", response_model=UserResponse)
+def update_user_role(
+    user_id: int,
+    new_role: str = Query(..., description="New role: user or industry (admin cannot be changed)"),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Update user role (admin only). Admin role cannot be changed."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    # Prevent changing admin role
+    if user.role == RoleEnum.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin role cannot be changed. Admin can only be created via command line."
+        )
+    
+    # Prevent creating new admin via UI
+    if new_role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin role cannot be assigned via UI. Admin can only be created via command line."
+        )
+    
+    # Validate role (only user or industry allowed)
+    try:
+        new_role_enum = RoleEnum(new_role)
+        if new_role_enum == RoleEnum.ADMIN:
+            raise ValueError("Admin role not allowed")
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid role. Must be 'user' or 'industry' (admin cannot be assigned)"
+        )
+    
+    user.role = new_role_enum
+    db.commit()
+    db.refresh(user)
+    
+    return UserResponse(
+        id=user.id,
+        full_name=user.full_name,
+        email=user.email,
+        phone_e164=user.phone_e164,
+        locale=user.locale,
+        language=user.language.value if user.language else None,
+        role=user.role.value,
+        age=user.age,
+        occupation=user.occupation,
+        location=user.location,
+        activity_level=user.activity_level,
+        sensitivity_level=user.sensitivity_level,
+        privacy_consent=user.privacy_consent,
+    )
 

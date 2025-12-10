@@ -1,15 +1,21 @@
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, DateTime, Enum as SqlEnum, Text, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, DateTime, Enum as SqlEnum, Text, Boolean, Float
 from sqlalchemy.sql import func
 from app.db.postgres import Base
+
+if TYPE_CHECKING:
+    from app.db.models.compliance import ComplianceRecord
+    from app.db.models.feedback import CommunityFeedback
 
 
 class RoleEnum(str, Enum):
     USER = "user"
     ADMIN = "admin"
+    INDUSTRY = "industry"
 
 
 class LanguageEnum(str, Enum):
@@ -51,9 +57,29 @@ class User(Base):
     privacy_consent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     privacy_consent_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
+    # Custom alert thresholds
+    alert_pm25_threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    alert_pm10_threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    alert_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    alert_methods: Mapped[str | None] = mapped_column(String(100), nullable=True)  # JSON: ["whatsapp", "email"]
+    alert_frequency: Mapped[str | None] = mapped_column(String(50), nullable=True)  # "realtime", "hourly", "daily"
+    
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         server_default=func.now(), 
         onupdate=func.now()
+    )
+    
+    # Relationships
+    compliance_records: Mapped[list["ComplianceRecord"]] = relationship(
+        "ComplianceRecord",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    feedbacks: Mapped[list["CommunityFeedback"]] = relationship(
+        "CommunityFeedback",
+        foreign_keys="[CommunityFeedback.user_id]",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )

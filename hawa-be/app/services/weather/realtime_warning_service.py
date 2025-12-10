@@ -199,3 +199,4 @@ class RealtimeWarningService:
             "max_pm25": max(pm25_values) if pm25_values else None,
             "max_pm10": max(pm10_values) if pm10_values else None
         }
+

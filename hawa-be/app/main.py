@@ -10,6 +10,8 @@ from fastapi.responses import JSONResponse
 from app.db.postgres import Base, engine
 from app.db.models import user as user_models  # noqa: F401  # ensure model is registered
 from app.db.models import weather_knowledge as weather_knowledge_models  # noqa: F401  # ensure model is registered
+from app.db.models import compliance as compliance_models  # noqa: F401  # ensure model is registered
+from app.db.models import feedback as feedback_models  # noqa: F401  # ensure model is registered
 from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
 from app.api.weather import router as weather_router
@@ -36,6 +38,8 @@ origins = [
     "http://127.0.0.1:3000",
     "http://localhost:5174",  # Alternative Vite port
     "http://127.0.0.1:5174",
+    "http://localhost:8000",  # Backend itself
+    "http://127.0.0.1:8000",
 ]
 
 # CORS Middleware configuration
@@ -45,9 +49,24 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # All common localhost ports
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
+    allow_methods=["*"],  # Allow all methods including OPTIONS
     allow_headers=["*"],  # Allow all headers
+    expose_headers=["*"],  # Expose all headers
 )
+
+# Explicit OPTIONS handler for preflight requests
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    """Handle OPTIONS preflight requests"""
+    return JSONResponse(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
 
 
 # Rate Limiting Middleware
@@ -149,6 +168,18 @@ def on_startup() -> None:
     # Import and include realtime router (lazy import to avoid circular deps)
     from app.api.weather_realtime import router as realtime_router
     app.include_router(realtime_router)  # Realtime warnings routes
+    
+    # Import and include compliance router (lazy import to avoid circular deps)
+    from app.api.compliance import router as compliance_router
+    app.include_router(compliance_router)  # Compliance routes - protected by get_current_industry_user
+
+    # Import and include feedback router (lazy import to avoid circular deps)
+    from app.api.feedback import router as feedback_router
+    app.include_router(feedback_router)  # Feedback routes - protected by get_current_user
+
+    # Import and include admin feedback router (lazy import to avoid circular deps)
+    from app.api.admin_feedback import router as admin_feedback_router
+    app.include_router(admin_feedback_router)  # Admin feedback routes - protected by get_current_admin
 
     # Start weather notification scheduler (06:00 daily, 12:00 if AQI bad)
     start_default_scheduler()

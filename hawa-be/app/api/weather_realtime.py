@@ -124,3 +124,4 @@ def get_realtime_warnings_summary(
         ) from e
     except Exception as e:
         raise handle_google_sheets_error(e)
+
