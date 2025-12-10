@@ -7,9 +7,11 @@ export default function AdminSidebar({ isOpen, onClose }) {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   
   const currentUser = authService.getCurrentUser();
+  const [isLoading, setIsLoading] = useState(true);
   
   // Get current page from hash
   useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 350);
     const updateActiveMenu = () => {
       const hash = window.location.hash.slice(1);
       if (hash === 'admin') {
@@ -29,6 +31,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
     return () => {
       window.removeEventListener('hashchange', updateActiveMenu);
+      clearTimeout(timer);
     };
   }, []);
 
@@ -80,14 +83,21 @@ export default function AdminSidebar({ isOpen, onClose }) {
 
           {/* Sidebar Navigation Menu - Scrollable */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-h-0">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeMenu === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleMenuClick(item.hash)}
-                  className={`
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={`admin-skel-${idx}`}
+                    className="h-11 rounded-xl bg-gray-100 border border-gray-200 animate-pulse"
+                  />
+                ))
+              : menuItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeMenu === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleMenuClick(item.hash)}
+                      className={`
                     w-full flex items-center space-x-3 px-4 py-3 rounded-xl
                     transition-all duration-300 relative group
                     ${isActive 
@@ -95,22 +105,22 @@ export default function AdminSidebar({ isOpen, onClose }) {
                       : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
                     }
                   `}
-                >
-                  <Icon size={20} className={isActive ? 'text-white' : 'text-gray-500 group-hover:text-blue-600'} />
-                  <span className="font-medium text-sm">{item.label}</span>
-                  {isActive && (
-                    <div className="absolute right-3">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                    >
+                      <Icon size={20} className={isActive ? 'text-white' : 'text-gray-500 group-hover:text-blue-600'} />
+                      <span className="font-medium text-sm">{item.label}</span>
+                      {isActive && (
+                        <div className="absolute right-3">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
           </nav>
 
           {/* User Info & Logout - Sticky di bagian bawah */}
           <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-            {currentUser && (
+            {currentUser ? (
               <div className="mb-3 px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center space-x-2 mb-1">
                   <Users className="text-blue-600" size={16} />
@@ -119,6 +129,11 @@ export default function AdminSidebar({ isOpen, onClose }) {
                 <p className="text-sm font-semibold text-gray-900 truncate">
                   {currentUser.name || currentUser.email || 'Admin'}
                 </p>
+              </div>
+            ) : (
+              <div className="mb-3 px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm space-y-2 animate-pulse">
+                <div className="h-3 w-20 bg-gray-100 rounded" />
+                <div className="h-3 w-32 bg-gray-100 rounded" />
               </div>
             )}
             <button

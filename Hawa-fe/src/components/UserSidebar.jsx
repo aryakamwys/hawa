@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 export default function UserSidebar({ isOpen, onClose }) {
   const currentUser = authService.getCurrentUser();
   const [currentHash, setCurrentHash] = useState(window.location.hash || '#landing');
+  const [isLoading, setIsLoading] = useState(true);
   
   // Base menu items for all users
   const baseNavItems = [
@@ -21,9 +22,13 @@ export default function UserSidebar({ isOpen, onClose }) {
     : baseNavItems;
 
   useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 350);
     const onHashChange = () => setCurrentHash(window.location.hash || '#landing');
     window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      clearTimeout(timer);
+    };
   }, []);
   
   const handleLogout = () => {
@@ -64,38 +69,45 @@ export default function UserSidebar({ isOpen, onClose }) {
 
           {/* Navigation Menu */}
           <nav className="flex-1 px-4 py-6 space-y-3 overflow-y-auto min-h-0">
-            {navItems.map(({ label, hash, icon: Icon }) => {
-              const isActive = currentHash === hash;
-              return (
-                <button
-                  key={hash}
-                  onClick={() => {
-                    window.location.hash = hash;
-                    if (onClose) onClose();
-                  }}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all shadow-sm ${
-                    isActive
-                      ? 'bg-blue-50 border-blue-200 text-blue-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Icon size={18} className={isActive ? 'text-blue-600' : 'text-gray-500'} />
-                    <span className="text-sm font-semibold">{label}</span>
-                  </div>
-                  {isActive && (
-                    <span className="text-[11px] font-semibold text-blue-600 bg-white border border-blue-200 px-2 py-0.5 rounded-full">
-                      Aktif
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={`skeleton-${idx}`}
+                    className="h-11 rounded-xl bg-gray-100 border border-gray-200 animate-pulse"
+                  />
+                ))
+              : navItems.map(({ label, hash, icon: Icon }) => {
+                  const isActive = currentHash === hash;
+                  return (
+                    <button
+                      key={hash}
+                      onClick={() => {
+                        window.location.hash = hash;
+                        if (onClose) onClose();
+                      }}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all shadow-sm ${
+                        isActive
+                          ? 'bg-blue-50 border-blue-200 text-blue-700'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Icon size={18} className={isActive ? 'text-blue-600' : 'text-gray-500'} />
+                        <span className="text-sm font-semibold">{label}</span>
+                      </div>
+                      {isActive && (
+                        <span className="text-[11px] font-semibold text-blue-600 bg-white border border-blue-200 px-2 py-0.5 rounded-full">
+                          Aktif
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
           </nav>
 
           {/* User Info & Logout - Sticky di bagian bawah */}
           <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-            {currentUser && (
+            {currentUser ? (
               <div className="mb-3 px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center space-x-2 mb-1">
                   <Users className="text-blue-600" size={16} />
@@ -104,6 +116,11 @@ export default function UserSidebar({ isOpen, onClose }) {
                 <p className="text-sm font-semibold text-gray-900 truncate">
                   {currentUser.name || currentUser.email || 'User'}
                 </p>
+              </div>
+            ) : (
+              <div className="mb-3 px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm space-y-2 animate-pulse">
+                <div className="h-3 w-20 bg-gray-100 rounded" />
+                <div className="h-3 w-32 bg-gray-100 rounded" />
               </div>
             )}
             <button

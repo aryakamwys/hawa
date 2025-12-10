@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import UserSidebar from '../components/UserSidebar';
 import ComplianceTracker from '../components/ComplianceTracker';
+import ProfileDropdown from '../components/ProfileDropdown';
+import Breadcrumbs from '../components/Breadcrumbs';
 import { authService } from '../services/auth';
 import { Menu } from 'lucide-react';
 
@@ -50,12 +52,20 @@ export default function CompliancePage() {
                   <h1 className="text-lg font-black text-gray-900">Compliance Analytics</h1>
                 </div>
               </div>
+              <ProfileDropdown />
             </div>
           </div>
         </nav>
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
+            <Breadcrumbs
+              items={[
+                { label: 'Home', href: '#dashboard' },
+                { label: 'Compliance' }
+              ]}
+              className="mb-4"
+            />
             {/* Header */}
             <div className="mb-6">
               <h1 className="text-3xl font-black text-gray-900 mb-2">

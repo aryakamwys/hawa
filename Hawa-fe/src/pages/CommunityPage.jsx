@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import UserSidebar from '../components/UserSidebar';
+import ProfileDropdown from '../components/ProfileDropdown';
+import Breadcrumbs from '../components/Breadcrumbs';
 import { authService } from '../services/auth';
 import { feedbackService } from '../services/feedback';
 import { Menu, MessageSquare, Plus, Eye, MapPin, Filter, Search, X, Loader2, FileImage, User, Clock } from 'lucide-react';
@@ -175,19 +177,29 @@ export default function CommunityPage() {
                   <h1 className="text-lg font-black text-gray-900">Community Reports</h1>
                 </div>
               </div>
-              <button
-                onClick={() => setShowForm(!showForm)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
-              >
-                <Plus size={18} />
-                <span className="hidden sm:inline">Buat Report</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <ProfileDropdown />
+                <button
+                  onClick={() => setShowForm(!showForm)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+                >
+                  <Plus size={18} />
+                  <span className="hidden sm:inline">Buat Report</span>
+                </button>
+              </div>
             </div>
           </div>
         </nav>
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto">
+            <Breadcrumbs
+              items={[
+                { label: 'Home', href: '#dashboard' },
+                { label: 'Community' }
+              ]}
+              className="mb-4"
+            />
             {/* Header */}
             <div className="mb-6">
               <h1 className="text-3xl font-black text-gray-900 mb-2">

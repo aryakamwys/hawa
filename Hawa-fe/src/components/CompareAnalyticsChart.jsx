@@ -18,11 +18,11 @@ function MetricSparkline({ title, primary, secondary, unit = 'µg/m³', compact 
   );
 
   const renderBars = (series, color, border) => (
-    <div className={`flex items-end gap-1 ${compact ? 'h-20' : 'h-28'}`}>
+    <div className={`flex items-end gap-1 ${compact ? 'h-16' : 'h-28'}`}>
       {series.map((point, idx) => (
         <div
           key={`${point.time}-${idx}-${color}`}
-          className={`${compact ? 'w-2' : 'w-2.5'} rounded-sm transition-all`}
+          className={`${compact ? 'w-1.5' : 'w-2.5'} rounded-sm transition-all`}
           style={{
             height: `${Math.max(6, (Math.min(point.value || 0, maxVal) / maxVal) * 100)}%`,
             backgroundColor: color,
@@ -149,12 +149,12 @@ export default function CompareAnalyticsChart({
   const secondarySeries = data?.secondary?.series || [];
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-2xl shadow-sm ${compact ? 'p-4 space-y-3' : 'p-6 space-y-4'}`}>
+    <div className={`bg-white border border-gray-200 rounded-2xl shadow-sm ${compact ? 'p-3 space-y-3' : 'p-6 space-y-4'}`}>
       <div className="flex flex-col gap-2">
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-500">Historical trends & analytics</p>
-          <h3 className="text-lg font-bold text-gray-900">Compare by Date / Location</h3>
-          <p className="text-sm text-gray-600">Pantau pola polusi lintas kota dan rentang waktu.</p>
+          <h3 className="text-base font-bold text-gray-900">Compare by Date / Location</h3>
+          <p className="text-xs text-gray-600">Pantau pola polusi lintas kota dan rentang waktu.</p>
         </div>
 
         {allowControls ? (

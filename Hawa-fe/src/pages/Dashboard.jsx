@@ -5,6 +5,8 @@ import UserSidebar from '../components/UserSidebar';
 import HourlyForecast from '../components/HourlyForecast';
 import DailyForecast from '../components/DailyForecast';
 import { WeatherCardSkeleton, ForecastCardSkeleton, MapCardSkeleton } from '../components/LoadingSkeleton';
+import ProfileDropdown from '../components/ProfileDropdown';
+import Breadcrumbs from '../components/Breadcrumbs';
 import { authService } from '../services/auth';
 
 export default function Dashboard() {
@@ -153,12 +155,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => (window.location.hash = '#profile')}
-                  className="hidden sm:inline-flex items-center space-x-2 px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-xs font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 transition-all shadow-sm"
-                >
-                  <span>Profile</span>
-                </button>
+                <ProfileDropdown />
                 <div className="relative">
                   <button
                     onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
@@ -238,7 +235,17 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <div className="flex items-center justify-between animate-fade-in">
+              <Breadcrumbs
+                items={[
+                  { label: 'Home', href: '#dashboard' },
+                  { label: 'Dashboard' }
+                ]}
+              />
+              <span className="text-xs text-gray-500 hidden sm:block">Updated {getCurrentDateTime()}</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 animate-fade-in">
               <div className="lg:col-span-2">
                 <div className="text-xs text-gray-500 mb-1">{getCurrentDateTime()}</div>
                 <div className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">

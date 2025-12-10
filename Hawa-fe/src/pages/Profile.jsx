@@ -3,6 +3,8 @@ import { Menu, Save, CheckCircle2, XCircle, User as UserIcon } from 'lucide-reac
 import { authService } from '../services/auth';
 import UserSidebar from '../components/UserSidebar';
 import AlertSettings from '../components/AlertSettings';
+import ProfileDropdown from '../components/ProfileDropdown';
+import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function Profile() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -166,20 +168,29 @@ export default function Profile() {
                 </div>
               </div>
 
-              <button
-                onClick={handleSubmit}
-                disabled={isSaving || isLoading}
-                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Save size={18} className={isSaving ? 'animate-spin' : ''} />
-                <span>Simpan</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <ProfileDropdown />
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSaving || isLoading}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Save size={18} className={isSaving ? 'animate-spin' : ''} />
+                  <span>Simpan</span>
+                </button>
+              </div>
             </div>
           </div>
         </nav>
 
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-4">
+            <Breadcrumbs
+              items={[
+                { label: 'Home', href: '#dashboard' },
+                { label: 'Profile' }
+              ]}
+            />
             <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 sm:p-8">
               {error && (
                 <div className="mb-4 flex items-center space-x-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">

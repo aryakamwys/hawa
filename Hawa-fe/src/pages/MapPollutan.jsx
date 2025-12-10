@@ -5,6 +5,8 @@ import HeatmapMap from '../components/HeatmapMap';
 import HeatmapInfo from '../components/HeatmapInfo';
 import HeatmapTips from '../components/HeatmapTips';
 import CompareAnalyticsChart from '../components/CompareAnalyticsChart';
+import ProfileDropdown from '../components/ProfileDropdown';
+import Breadcrumbs from '../components/Breadcrumbs';
 import { authService } from '../services/auth';
 
 export default function MapPollutan() {
@@ -82,6 +84,7 @@ export default function MapPollutan() {
                   </div>
                 </div>
               </div>
+              <ProfileDropdown />
             </div>
           </div>
         </nav>
@@ -89,8 +92,15 @@ export default function MapPollutan() {
         {/* Content - Scrollable */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
           <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+            <Breadcrumbs
+              items={[
+                { label: 'Home', href: '#dashboard' },
+                { label: 'Map Pollutan' }
+              ]}
+              className="animate-fade-in"
+            />
             {/* Map and Info Section - Side by Side */}
-            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isSidebarOpen ? 'hidden lg:grid' : 'grid'}`}>
+            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${isSidebarOpen ? 'hidden lg:grid' : 'grid'} animate-fade-in`}>
               {/* Map Section - Left */}
               <div className="lg:col-span-2">
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
@@ -118,25 +128,23 @@ export default function MapPollutan() {
               </div>
 
               {/* Info Section - Right */}
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 flex flex-col gap-4">
                 <HeatmapInfo 
                   apiUrl={apiUrl} 
                   token={token} 
                   language={userLanguage}
                   mapHeight={mapHeight}
                 />
-                <div className="mt-4">
-                  <CompareAnalyticsChart
-                    apiUrl={apiUrl}
-                    token={token}
-                    defaultPrimary="Bandung"
-                    defaultSecondary=""
-                    defaultHours={72}
-                    allowControls={false}
-                    compact
-                    forcePrimaryOnly
-                  />
-                </div>
+                <CompareAnalyticsChart
+                  apiUrl={apiUrl}
+                  token={token}
+                  defaultPrimary="Bandung"
+                  defaultSecondary=""
+                  defaultHours={72}
+                  allowControls={false}
+                  compact
+                  forcePrimaryOnly
+                />
               </div>
             </div>
 
