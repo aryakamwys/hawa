@@ -21,6 +21,12 @@ export default function Dashboard() {
   
   const user = useMemo(() => authService.getCurrentUser(), []);
   const userLanguage = user?.language || language;
+
+  useEffect(() => {
+    if (user?.language && user.language !== language) {
+      setLanguage(user.language);
+    }
+  }, [user, language]);
   const userLocation = user?.location || 'Bandung';
 
   const translations = {
@@ -137,7 +143,7 @@ export default function Dashboard() {
         onClose={() => setIsSidebarOpen(false)} 
       />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-visible">
         <nav className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm h-14">
           <div className="px-4 sm:px-6 lg:px-8 h-full">
             <div className="flex items-center justify-between h-full">

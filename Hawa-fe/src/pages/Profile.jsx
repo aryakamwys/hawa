@@ -168,17 +168,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <ProfileDropdown />
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSaving || isLoading}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Save size={18} className={isSaving ? 'animate-spin' : ''} />
-                  <span>Simpan</span>
-                </button>
-              </div>
+              <ProfileDropdown />
             </div>
           </div>
         </nav>
@@ -191,7 +181,7 @@ export default function Profile() {
                 { label: 'Profile' }
               ]}
             />
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 sm:p-8">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-6 sm:p-8 space-y-6">
               {error && (
                 <div className="mb-4 flex items-center space-x-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
                   <XCircle size={18} />
@@ -367,6 +357,16 @@ export default function Profile() {
                     </button>
                   </div>
                 </fieldset>
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSaving || isLoading}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Save size={18} className={isSaving ? 'animate-spin' : ''} />
+                    <span>Simpan Perubahan</span>
+                  </button>
+                </div>
               </form>
 
               {/* Alert Settings Section */}
