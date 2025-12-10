@@ -125,16 +125,20 @@ export default function MapPollutan() {
                   language={userLanguage}
                   mapHeight={mapHeight}
                 />
+                <div className="mt-4">
+                  <CompareAnalyticsChart
+                    apiUrl={apiUrl}
+                    token={token}
+                    defaultPrimary="Bandung"
+                    defaultSecondary=""
+                    defaultHours={72}
+                    allowControls={false}
+                    compact
+                    forcePrimaryOnly
+                  />
+                </div>
               </div>
             </div>
-
-            {/* Historical compare chart */}
-            <CompareAnalyticsChart
-              apiUrl={apiUrl}
-              token={token}
-              defaultPrimary="Bandung"
-              defaultSecondary="Jakarta"
-            />
 
             {/* Tips Section - Below Map, Full Width */}
             <div>
