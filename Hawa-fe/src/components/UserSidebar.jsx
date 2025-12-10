@@ -12,8 +12,7 @@ export default function UserSidebar({ isOpen, onClose }) {
   const baseNavItems = [
     { label: 'Dashboard', hash: '#dashboard', icon: LayoutDashboard },
     { label: 'Map Pollutan', hash: '#map', icon: Map },
-    { label: 'Community Reports', hash: '#community', icon: MessageSquare },
-    { label: 'Profil', hash: '#profile', icon: User }
+    { label: 'Community Reports', hash: '#community', icon: MessageSquare }
   ];
   
   // Add Compliance menu for industry users
@@ -105,32 +104,7 @@ export default function UserSidebar({ isOpen, onClose }) {
                 })}
           </nav>
 
-          {/* User Info & Logout - Sticky di bagian bawah */}
-          <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-            {currentUser ? (
-              <div className="mb-3 px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Users className="text-blue-600" size={16} />
-                  <p className="text-xs text-gray-500">Selamat Datang</p>
-                </div>
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {currentUser.name || currentUser.email || 'User'}
-                </p>
-              </div>
-            ) : (
-              <div className="mb-3 px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm space-y-2 animate-pulse">
-                <div className="h-3 w-20 bg-gray-100 rounded" />
-                <div className="h-3 w-32 bg-gray-100 rounded" />
-              </div>
-            )}
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-all duration-300 text-sm font-medium shadow-sm"
-            >
-              <LogOut size={16} />
-              <span>Keluar</span>
-            </button>
-          </div>
+          {/* Footer removed: logout handled via top navbar dropdown */}
         </div>
       </aside>
 

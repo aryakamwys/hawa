@@ -142,6 +142,24 @@ export default function CommunityPage() {
     return colors[severity] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
+  const getAttachments = (attachmentPaths) => {
+    if (!attachmentPaths) return [];
+    if (Array.isArray(attachmentPaths)) return attachmentPaths;
+    try {
+      const parsed = JSON.parse(attachmentPaths);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const toAttachmentUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const base = apiUrl.replace(/\/$/, '');
+    return `${base}/uploads/${path}`;
+  };
+
   const filteredReports = reports.filter(report => {
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
@@ -177,16 +195,7 @@ export default function CommunityPage() {
                   <h1 className="text-lg font-black text-gray-900">Community Reports</h1>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <ProfileDropdown />
-                <button
-                  onClick={() => setShowForm(!showForm)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
-                >
-                  <Plus size={18} />
-                  <span className="hidden sm:inline">Buat Report</span>
-                </button>
-              </div>
+              <ProfileDropdown />
             </div>
           </div>
         </nav>
@@ -201,13 +210,22 @@ export default function CommunityPage() {
               className="mb-4"
             />
             {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-3xl font-black text-gray-900 mb-2">
-                Community Reports
-              </h1>
-              <p className="text-gray-600">
-                Laporan dan diskusi tentang polusi udara dari komunitas. Lihat laporan dari user lain dan bagikan pengalaman Anda.
-              </p>
+            <div className="mb-6 flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-3xl font-black text-gray-900 mb-2">
+                  Community Reports
+                </h1>
+                <p className="text-gray-600 max-w-2xl">
+                  Laporan dan diskusi tentang polusi udara dari komunitas. Lihat laporan dari user lain dan bagikan pengalaman Anda.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <Plus size={18} />
+                <span>Buat Report</span>
+              </button>
             </div>
 
             {/* Alerts */}
@@ -471,7 +489,32 @@ export default function CommunityPage() {
                       
                       <h3 className="text-lg font-bold text-gray-900 mb-2">{report.title}</h3>
                       <p className="text-gray-700 mb-4 whitespace-pre-wrap">{report.description}</p>
-                      
+
+                      {/* Attachments */}
+                      {getAttachments(report.attachment_paths || report.attachments)?.length > 0 && (
+                        <div className="mb-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {getAttachments(report.attachment_paths || report.attachments).map((path, idx) => {
+                              const url = toAttachmentUrl(path);
+                              if (!url) return null;
+                              return (
+                                <div
+                                  key={`${path}-${idx}`}
+                                  className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                                >
+                                  <img
+                                    src={url}
+                                    alt={`lampiran-${idx + 1}`}
+                                    className="w-full h-28 object-cover transition-transform duration-200 hover:scale-105"
+                                    loading="lazy"
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       {report.category && (
                         <div className="mb-4">
                           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
