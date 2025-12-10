@@ -20,6 +20,8 @@ export default function AdminSidebar({ isOpen, onClose }) {
         setActiveMenu('users');
       } else if (hash === 'admin/iot-data') {
         setActiveMenu('iot-data');
+      } else if (hash === 'admin/feedback') {
+        setActiveMenu('feedback');
       }
     };
 
