@@ -174,7 +174,6 @@ export default function AppRouter() {
         {currentPage === 'admin/iot-data' && <AdminIoTData key={`admin-iot-data-${pageKey}`} />}
         {currentPage === 'admin/feedback' && <AdminFeedback key={`admin-feedback-${pageKey}`} />}
         {currentPage === 'map' && <MapPollutan key={`map-${pageKey}`} />}
-        {currentPage === 'compliance' && <CompliancePage key={`compliance-${pageKey}`} />}
         {currentPage === 'community' && <CommunityPage key={`community-${pageKey}`} />}
         {currentPage === 'landing' && <HawaLanding key={`landing-${pageKey}`} />}
       </div>
