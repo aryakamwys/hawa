@@ -294,6 +294,32 @@ class SpreadsheetService:
             'device_id': get_value(['Device ID', 'device_id', 'Device', 'device']),
         }
 
+        # Fallback: jika header generik (col_1, col_2, ...) gunakan urutan kolom bawaan
+        # Contoh data (dari debug):
+        # col_1=id, col_2=timestamp, col_3=pm25, col_4=pm10, col_5=pm10/ozone,
+        # col_6=status, col_7=temp, col_8=humidity, col_9=pressure, col_10=?, col_11=device,
+        # col_12=lat, col_13=lon, col_14=location
+        if all(str(k).startswith("col_") for k in raw_data.keys()):
+            cols = list(raw_data.keys())
+
+            def value_at(idx: int):
+                if 0 <= idx < len(cols):
+                    return raw_data.get(cols[idx])
+                return None
+
+            processed['pm25'] = processed['pm25'] or parse_numeric(value_at(2), expected_max=500.0)
+            processed['pm10'] = processed['pm10'] or parse_numeric(value_at(3), expected_max=1000.0)
+            # Jika kolom 4 (index 4) berisi polutan lain / AQI, gunakan sebagai pm10 bila belum ada
+            if processed['pm10'] is None:
+                processed['pm10'] = parse_numeric(value_at(4), expected_max=1000.0)
+            processed['air_quality_level'] = processed['air_quality_level'] or value_at(5)
+            processed['temperature'] = processed['temperature'] or parse_numeric(value_at(6), expected_max=50.0)
+            processed['humidity'] = processed['humidity'] or parse_numeric(value_at(7), expected_max=100.0)
+            processed['pressure'] = processed['pressure'] or parse_numeric(value_at(8))
+            processed['device_id'] = processed['device_id'] or value_at(10)
+            processed['timestamp'] = processed['timestamp'] or value_at(1)
+            processed['location'] = processed['location'] or value_at(len(cols) - 1)
+
         return processed
 
     def validate_weather_data(self, data: Dict[str, Any]) -> bool:

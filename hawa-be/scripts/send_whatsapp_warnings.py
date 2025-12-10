@@ -91,7 +91,20 @@ def check_and_send_warnings(
         weather_data = spreadsheet_service.process_bmkg_data(raw_data)
         
         if not spreadsheet_service.validate_weather_data(weather_data):
-            results["errors"].append("Invalid weather data from spreadsheet")
+            # Tambahkan debug info agar mudah cek kolom/format
+            last_row = raw_data[-1] if isinstance(raw_data, list) and raw_data else raw_data
+            results["errors"].append(
+                "Invalid weather data from spreadsheet (missing pm25/pm10). "
+                "See Spreadsheet Debug below."
+            )
+            print("\n--- Spreadsheet Debug ---")
+            # Tampilkan contoh header & row terakhir
+            if isinstance(raw_data, list) and raw_data:
+                headers = list(raw_data[-1].keys())
+                print(f"Headers (sample): {headers}")
+            print(f"Last row (raw): {last_row}")
+            print(f"Parsed data: {weather_data}")
+            print("--- End Spreadsheet Debug ---\n")
             return results
         
     except Exception as e:

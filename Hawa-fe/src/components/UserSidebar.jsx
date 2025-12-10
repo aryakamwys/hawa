@@ -4,9 +4,10 @@ import { authService } from '../services/auth';
 import PropTypes from 'prop-types';
 
 export default function UserSidebar({ isOpen, onClose }) {
-  const currentUser = authService.getCurrentUser();
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
   const [currentHash, setCurrentHash] = useState(window.location.hash || '#landing');
   const [isLoading, setIsLoading] = useState(true);
+  const userRole = typeof currentUser?.role === 'string' ? currentUser.role.toLowerCase() : currentUser?.role;
   
   // Base menu items for all users
   const baseNavItems = [
@@ -16,7 +17,7 @@ export default function UserSidebar({ isOpen, onClose }) {
   ];
   
   // Add Compliance menu for industry users
-  const navItems = currentUser?.role === 'industry' 
+  const navItems = userRole === 'industry' 
     ? [...baseNavItems, { label: 'Compliance', hash: '#compliance', icon: Factory }]
     : baseNavItems;
 
@@ -27,6 +28,44 @@ export default function UserSidebar({ isOpen, onClose }) {
     return () => {
       window.removeEventListener('hashchange', onHashChange);
       clearTimeout(timer);
+    };
+  }, []);
+
+  // Ensure we have the freshest user (with role) for role-based menu rendering
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncUser = async () => {
+      const stored = authService.getCurrentUser();
+      if (stored?.role) {
+        setCurrentUser(stored);
+        setIsLoading(false);
+        return;
+      }
+
+      if (!authService.isAuthenticated()) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const profile = await authService.getProfile();
+        if (!cancelled && profile) {
+          setCurrentUser(profile);
+        }
+      } catch (err) {
+        console.error('Failed to refresh user profile for sidebar:', err);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    syncUser();
+
+    return () => {
+      cancelled = true;
     };
   }, []);
   

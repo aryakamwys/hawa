@@ -8,17 +8,92 @@ import { Menu } from 'lucide-react';
 
 export default function CompliancePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState(() => {
+    const stored = authService.getCurrentUser();
+    if (stored?.role && typeof stored.role === 'string') {
+      return { ...stored, role: stored.role.toLowerCase() };
+    }
+    return stored;
+  });
+  const [checkingUser, setCheckingUser] = useState(true);
+  const [profileError, setProfileError] = useState('');
   const token = authService.getToken();
   const apiUrl = useMemo(() => import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000', []);
-  const user = useMemo(() => authService.getCurrentUser(), []);
   const userLanguage = user?.language || 'id';
 
   useEffect(() => {
+    let active = true;
+    let safetyTimer;
+
+    const ensureUser = async () => {
+      // Fail-safe: do not hang forever
+      safetyTimer = setTimeout(() => {
+        if (active) {
+          setCheckingUser(false);
+          setProfileError('Gagal memuat profil. Coba muat ulang atau login ulang.');
+        }
+      }, 8000);
+
+      const stored = authService.getCurrentUser();
+      if (stored?.role) {
+        setUser({ ...stored, role: typeof stored.role === 'string' ? stored.role.toLowerCase() : stored.role });
+        setCheckingUser(false);
+        clearTimeout(safetyTimer);
+        return;
+      }
+
+      if (!authService.isAuthenticated()) {
+        setCheckingUser(false);
+        window.location.hash = '#login';
+        clearTimeout(safetyTimer);
+        return;
+      }
+
+      try {
+        const fresh = await authService.getProfile();
+        if (active && fresh) {
+          setUser({ ...fresh, role: typeof fresh.role === 'string' ? fresh.role.toLowerCase() : fresh.role });
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile for compliance page:', err);
+        if (active) {
+          setProfileError(err?.message || 'Gagal memuat profil.');
+        }
+      } finally {
+        if (active) {
+          setCheckingUser(false);
+        }
+        clearTimeout(safetyTimer);
+      }
+    };
+
+    ensureUser();
+
+    return () => {
+      active = false;
+      clearTimeout(safetyTimer);
+    };
+  }, []);
+
+  useEffect(() => {
     // Redirect if not industry user
-    if (user && user.role !== 'industry') {
+    if (!checkingUser && user && user.role !== 'industry') {
       window.location.hash = '#dashboard';
     }
-  }, [user]);
+  }, [user, checkingUser]);
+
+  if (checkingUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Memuat profil...</p>
+          {profileError && (
+            <p className="mt-2 text-sm text-red-600">{profileError}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (!user || user.role !== 'industry') {
     return (

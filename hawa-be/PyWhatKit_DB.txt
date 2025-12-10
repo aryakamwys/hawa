@@ -58,3 +58,18 @@ Time: 19:54
 Phone Number: +6285215339384
 Message: ⚠️ *PERINGATAN KUALITAS UDARA**Tingkat Résiko:* MEDIUM*Kekhawatiran Utama:*Particulate Matter (PM2.5)*Rekomendasi Personalisasi:*Warga dengan kondisi asma perlu memantau kualitas udara dan membatasi aktivitas outdoor saat kualitas udara sedang*Tindakan:*🔴 Batasi aktivitas outdoor🟡 Gunakan masker saat keluar rumah🟢 Pastikan obat-obatan tersedia⏰ *Mariksa deui:* 2025-12-05 21:54:42_HAWA - Air Quality Monitoring System_
 --------------------
+Date: 10/12/2025
+Time: 17:6
+Phone Number: +6285215339384
+Message: ⚠️ *AIR QUALITY WARNING**Risk Level:* LOW*Primary Concern:*Today's air quality in Bandung is good, with PM2.5 at 11.7 and PM10 at 11.7.*Personalized Recommendation:*You can safely engage in outdoor activities. However, considering your asthma, it's advisable to monitor your breathing and adjust your activities if you experience any discomfort.*Action Items:*⏰ *Next check:* 2025-12-10 19:05:48_HAWA - Air Quality Monitoring System_
+--------------------
+Date: 10/12/2025
+Time: 17:6
+Phone Number: +6285215339384
+Message: ⚠️ *AIR QUALITY WARNING**Risk Level:* LOW*Primary Concern:*Today's air quality in Bandung is good, with PM2.5 at 11.7 and PM10 at 11.7.*Personalized Recommendation:*You can safely engage in outdoor activities. However, considering your asthma, it's advisable to monitor your breathing and adjust your activities if you experience any discomfort.*Action Items:*⏰ *Next check:* 2025-12-10 19:06:34_HAWA - Air Quality Monitoring System_
+--------------------
+Date: 10/12/2025
+Time: 17:7
+Phone Number: +6285215339384
+Message: ⚠️ *AIR QUALITY WARNING**Risk Level:* LOW*Primary Concern:*Today's air quality in Bandung is good, with PM2.5 at 11.7 and PM10 at 11.7.*Personalized Recommendation:*As a 24-year-old with moderate activity level and medium sensitivity, and asthma condition, you can continue with your daily activities. However, maintain good ventilation in your home and consider wearing a mask if you experience any respiratory issues.*Action Items:*⏰ *Next check:* 2025-12-10 19:07:15_HAWA - Air Quality Monitoring System_
+--------------------

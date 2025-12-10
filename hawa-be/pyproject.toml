@@ -26,7 +26,8 @@ numpy = "2.3.5"
 sentence-transformers = "^5.1.2"  # Untuk embeddings lokal
 cryptography = "^46.0.3"  # Untuk encryption
 gspread = "^6.2.1"  # Google Sheets API
-google-auth = "^2.43.0"  # Google Authentication
+# Keep google-auth in the range supported by google-auth-oauthlib (<2.42)
+google-auth = "^2.41.0"  # Google Authentication
 google-auth-oauthlib = "^1.2.3"
 google-auth-httplib2 = "^0.2.1"
 
