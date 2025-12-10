@@ -138,6 +138,43 @@ class OpenMeteoService:
         except Exception as e:
             return {"error": f"Error fetching hourly forecast: {str(e)}", "data": None}
 
+    def get_air_quality_history(self, city: str = "Bandung", hours: int = 72) -> Dict[str, Any]:
+        """
+        Get historical air quality (PM2.5 & PM10) using Open-Meteo Air Quality API.
+
+        Args:
+            city: City name (default: Bandung)
+            hours: Number of hours to retrieve (default: 72, max: 168)
+
+        Returns:
+            Dictionary with normalized air quality series
+        """
+        try:
+            lat, lon = self._get_city_coordinates(city)
+
+            url = "https://air-quality-api.open-meteo.com/v1/air-quality"
+            total_days = max(1, min((hours // 24) + 1, 7))
+            params = {
+                "latitude": lat,
+                "longitude": lon,
+                "hourly": "pm10,pm2_5",
+                "timezone": "Asia/Jakarta",
+                "past_days": total_days,
+                "forecast_days": 1,
+                "timeformat": "iso"
+            }
+
+            with httpx.Client(timeout=self.timeout) as client:
+                response = client.get(url, params=params)
+                response.raise_for_status()
+                data = response.json()
+
+            return self._normalize_air_quality_history(data, city, hours)
+        except httpx.HTTPError as e:
+            return {"error": f"HTTP error: {str(e)}", "data": None}
+        except Exception as e:
+            return {"error": f"Error fetching air quality: {str(e)}", "data": None}
+
     def _normalize_current_weather(self, data: Dict[str, Any], city: str) -> Dict[str, Any]:
         """Normalize Open-Meteo current weather response"""
         if "error" in data:
@@ -272,6 +309,36 @@ class OpenMeteoService:
             "hourly": hourly_forecasts
         }
         
+        return {"data": normalized, "error": None}
+
+    def _normalize_air_quality_history(self, data: Dict[str, Any], city: str, hours: int) -> Dict[str, Any]:
+        """Normalize Open-Meteo air quality history response."""
+        if "error" in data:
+            return {"error": data.get("error"), "data": None}
+
+        hourly = data.get("hourly", {})
+        times = hourly.get("time", [])
+        pm25 = hourly.get("pm2_5", [])
+        pm10 = hourly.get("pm10", [])
+
+        series = []
+        for idx, time_val in enumerate(times):
+            if len(series) >= hours:
+                break
+            series.append({
+                "time": time_val,
+                "pm25": pm25[idx] if idx < len(pm25) else None,
+                "pm10": pm10[idx] if idx < len(pm10) else None
+            })
+
+        normalized = {
+            "city": city,
+            "series": series,
+            "latitude": data.get("latitude"),
+            "longitude": data.get("longitude"),
+            "timezone": data.get("timezone")
+        }
+
         return {"data": normalized, "error": None}
 
     def _get_weather_description(self, code: int) -> Dict[str, str]:

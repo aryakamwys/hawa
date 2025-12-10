@@ -4,6 +4,7 @@ import UserSidebar from '../components/UserSidebar';
 import HeatmapMap from '../components/HeatmapMap';
 import HeatmapInfo from '../components/HeatmapInfo';
 import HeatmapTips from '../components/HeatmapTips';
+import CompareAnalyticsChart from '../components/CompareAnalyticsChart';
 import { authService } from '../services/auth';
 
 export default function MapPollutan() {
@@ -126,6 +127,14 @@ export default function MapPollutan() {
                 />
               </div>
             </div>
+
+            {/* Historical compare chart */}
+            <CompareAnalyticsChart
+              apiUrl={apiUrl}
+              token={token}
+              defaultPrimary="Bandung"
+              defaultSecondary="Jakarta"
+            />
 
             {/* Tips Section - Below Map, Full Width */}
             <div>

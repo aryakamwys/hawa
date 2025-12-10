@@ -737,3 +737,52 @@ def get_weather_analytics_summary(
             detail=f"Error generating analytics summary: {str(e)}"
         )
 
+
+@router.get("/analytics/compare", status_code=status.HTTP_200_OK)
+def compare_air_quality_trends(
+    current_user: "User" = Depends(get_current_user),
+    primary_city: str = Query(default="Bandung", description="Primary city to analyze"),
+    secondary_city: str | None = Query(default=None, description="Optional comparison city"),
+    hours: int = Query(default=72, ge=12, le=168, description="Hours of history to load (max 7 days)")
+):
+    """
+    Compare historical air quality (PM2.5 & PM10) between cities.
+
+    Uses Open-Meteo Air Quality API (no API key required).
+    """
+    weather_service = OpenMeteoService()
+
+    try:
+        primary = weather_service.get_air_quality_history(city=primary_city, hours=hours)
+        if primary.get("error"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=primary.get("error", "Failed to fetch primary city data")
+            )
+
+        secondary_data = None
+        if secondary_city:
+            secondary = weather_service.get_air_quality_history(city=secondary_city, hours=hours)
+            if secondary.get("error"):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=secondary.get("error", "Failed to fetch secondary city data")
+                )
+            secondary_data = secondary.get("data")
+
+        return {
+            "success": True,
+            "data": {
+                "primary": primary.get("data"),
+                "secondary": secondary_data
+            },
+            "source": "open-meteo"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error comparing air quality trends: {str(e)}"
+        )
+
