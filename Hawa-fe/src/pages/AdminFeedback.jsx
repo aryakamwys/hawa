@@ -1,6 +1,7 @@
 import AdminLayout from '../components/AdminLayout';
 import { MessageSquare, Loader2, Search, Filter, X, Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { adminFeedbackService } from '../services/adminFeedback';
+import { feedbackService } from '../services/feedback';
 import { authService } from '../services/auth';
 import { useState, useEffect } from 'react';
 
@@ -32,12 +33,29 @@ export default function AdminFeedback() {
       if (categoryFilter !== 'all') params.category = categoryFilter;
       if (searchTerm) params.search = searchTerm;
       
+      // Try admin endpoint first
       const data = await adminFeedbackService.getAllFeedback(token, params);
-      setReports(data.reports || []);
+      const adminReports = data.reports || [];
+      setReports(adminReports);
       if (data.stats) setStats(data.stats);
+
+      // If admin endpoint returns empty, fallback to public community feed so UI tidak kosong
+      if (adminReports.length === 0) {
+        const feed = await feedbackService.getCommunityFeed(token, { limit: params.limit, offset: params.offset, sort: 'newest' });
+        const fallback = feed?.reports || [];
+        setReports(fallback);
+        if (!data.stats && feed?.stats) setStats(feed.stats);
+      }
     } catch (err) {
-      setError('Failed to load feedback: ' + err.message);
+      setError('Failed to load admin feedback, showing community feed: ' + err.message);
       console.error('Error loading feedback:', err);
+      try {
+        const feed = await feedbackService.getCommunityFeed(token, { limit: 100, offset: 0, sort: 'newest' });
+        setReports(feed?.reports || []);
+        if (feed?.stats) setStats(feed.stats);
+      } catch (fallbackErr) {
+        console.error('Fallback community feed also failed:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
