@@ -2,6 +2,7 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Menu } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
+import ProfileDropdown from './ProfileDropdown';
 
 export default function AdminLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -36,8 +37,7 @@ export default function AdminLayout({ children }) {
                 </div>
               </div>
 
-              {/* Navbar kosong di kanan, siap untuk diisi menu admin nanti */}
-              <div></div>
+              <ProfileDropdown />
             </div>
           </div>
         </nav>
