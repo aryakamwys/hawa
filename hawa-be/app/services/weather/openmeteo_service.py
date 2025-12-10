@@ -161,7 +161,8 @@ class OpenMeteoService:
                 "timezone": "Asia/Jakarta",
                 "past_days": total_days,
                 "forecast_days": 1,
-                "timeformat": "iso"
+                # Open-Meteo expects iso8601 or unix; use iso8601 for consistency
+                "timeformat": "iso8601"
             }
 
             with httpx.Client(timeout=self.timeout) as client:
