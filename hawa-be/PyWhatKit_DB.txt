@@ -73,3 +73,13 @@ Time: 17:7
 Phone Number: +6285215339384
 Message: ⚠️ *AIR QUALITY WARNING**Risk Level:* LOW*Primary Concern:*Today's air quality in Bandung is good, with PM2.5 at 11.7 and PM10 at 11.7.*Personalized Recommendation:*As a 24-year-old with moderate activity level and medium sensitivity, and asthma condition, you can continue with your daily activities. However, maintain good ventilation in your home and consider wearing a mask if you experience any respiratory issues.*Action Items:*⏰ *Next check:* 2025-12-10 19:07:15_HAWA - Air Quality Monitoring System_
 --------------------
+Date: 10/12/2025
+Time: 17:39
+Phone Number: +6285215339384
+Message: ⚠️ *PERINGATAN KUALITAS UDARA**Tingkat Résiko:* LOW*Kekhawatiran Utama:*Kualitas udara di Bandung ayeuna pohara alus, kalayan kadar PM2.5 0.0 jeung PM10 1.4.*Rekomendasi Personalisasi:*Anjeun bisa kaluar jeung jalankeun aktivitas biasa, tapi tetep waspada kana kaayaan cuaca.*Tindakan:*⏰ *Mariksa deui:* 2025-12-10 19:39:25_HAWA - Air Quality Monitoring System_
+--------------------
+Date: 10/12/2025
+Time: 18:17
+Phone Number: +6285215339384
+Message: ⚠️ *AIR QUALITY WARNING**Risk Level:* LOW*Primary Concern:*Today's air quality in Bandung is good, with PM2.5 at 1.4 and PM10 at 2.5. The temperature is 20.9°C and humidity is 62.7%.*Personalized Recommendation:*You can safely engage in outdoor activities. However, considering your asthma, it's advisable to monitor your breathing and adjust your activities if you experience any discomfort.*Action Items:*⏰ *Next check:* 2025-12-10 20:17:42_HAWA - Air Quality Monitoring System_
+--------------------

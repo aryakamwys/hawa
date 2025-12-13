@@ -22,9 +22,9 @@ def setup_vector_db():
         try:
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             conn.commit()
-            print("✓ pgvector extension created/enabled")
+            print("[OK] pgvector extension created/enabled")
         except Exception as e:
-            print(f"⚠ Warning: Could not enable pgvector extension: {e}")
+            print(f"[WARNING] Could not enable pgvector extension: {e}")
             print("  Continuing without vector support (fallback mode)")
         
         # Create weather_knowledge table
@@ -47,7 +47,7 @@ def setup_vector_db():
             """
             conn.execute(text(create_table_sql))
             conn.commit()
-            print("✓ weather_knowledge table created")
+            print("[OK] weather_knowledge table created")
             
             # Create index for vector similarity search
             try:
@@ -57,22 +57,22 @@ def setup_vector_db():
                     WITH (lists = 100)
                 """))
                 conn.commit()
-                print("✓ Vector index created")
+                print("[OK] Vector index created")
             except Exception as e:
-                print(f"⚠ Warning: Could not create vector index: {e}")
+                print(f"[WARNING] Could not create vector index: {e}")
                 print("  Table created but without vector index")
             
             # Create index for language
             conn.execute(text("CREATE INDEX idx_weather_knowledge_language ON weather_knowledge(language)"))
             conn.commit()
-            print("✓ Language index created")
+            print("[OK] Language index created")
             
         except Exception as e:
-            print(f"✗ Error creating table: {e}")
+            print(f"[ERROR] Error creating table: {e}")
             conn.rollback()
             return False
         
-        print("\n✅ Vector database setup completed!")
+        print("\n[OK] Vector database setup completed!")
         return True
 
 if __name__ == "__main__":

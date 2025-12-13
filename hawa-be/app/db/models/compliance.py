@@ -51,3 +51,7 @@ class ComplianceRecord(Base):
     user: Mapped["User"] = relationship("User", back_populates="compliance_records")
 
 
+
+
+
+

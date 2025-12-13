@@ -245,3 +245,7 @@ CompareAnalyticsChart.propTypes = {
   compact: PropTypes.bool,
   forcePrimaryOnly: PropTypes.bool
 };
+
+
+
+

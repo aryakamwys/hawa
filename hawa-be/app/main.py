@@ -183,3 +183,8 @@ def on_startup() -> None:
 
     # Start weather notification scheduler (06:00 daily, 12:00 if AQI bad)
     start_default_scheduler()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
